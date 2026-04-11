@@ -8,91 +8,64 @@
     <link href="https://googleapis.com" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
         @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .refreshing { animation: spin-slow 1s linear infinite; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen">
 
-    <!-- Header -->
-    <header class="bg-slate-900 text-white p-4 sticky top-0 z-30 shadow-xl border-b border-white/5">
+    <header class="bg-slate-900 text-white p-4 sticky top-0 z-30 shadow-xl">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3">
-                <div class="p-2 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/20">
-                    <svg xmlns="http://w3.org" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5V19A9 3 0 0 0 21 19V5"></path><path d="M3 12A9 3 0 0 0 21 12"></path></svg>
+                <div class="p-2 bg-indigo-600 rounded-xl shadow-lg">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5V19A9 3 0 0 0 21 19V5"></path><path d="M3 12A9 3 0 0 0 21 12"></path></svg>
                 </div>
                 <div>
-                    <h1 class="text-lg font-black tracking-tight leading-none uppercase">SL1 Cloud Monitor</h1>
-                    <p id="sync-status" class="text-[10px] text-slate-400 font-bold tracking-widest mt-1 uppercase">Menunggu Data...</p>
+                    <h1 class="text-lg font-black tracking-tight uppercase">SL1 Cloud Monitor</h1>
+                    <p id="sync-status" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">SINKRONISASI...</p>
                 </div>
             </div>
-            <button onclick="fetchData()" id="refresh-btn" class="group flex items-center bg-slate-800 hover:bg-indigo-600 px-4 py-2 rounded-xl text-[11px] font-black transition-all active:scale-95 border border-slate-700">
-                <svg id="refresh-icon" class="mr-2" xmlns="http://w3.org" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>
+            <button onclick="fetchData()" id="refresh-btn" class="flex items-center bg-slate-800 hover:bg-indigo-600 px-4 py-2 rounded-xl text-[11px] font-black transition-all">
+                <svg id="refresh-icon" class="mr-2" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>
                 <span id="btn-text">REFRESH DATA</span>
             </button>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto p-4 md:p-6">
-        <!-- Error Alert -->
-        <div id="error-alert" class="hidden mb-6 p-5 bg-rose-50 border-2 border-rose-100 rounded-3xl flex items-center text-rose-800 shadow-sm">
-            <svg class="mr-4 shrink-0" xmlns="http://w3.org" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
-            <div>
-                <p class="text-xs font-black uppercase tracking-widest mb-1">Terjadi Kesalahan</p>
-                <p id="error-message" class="text-sm font-medium opacity-80"></p>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-6 rounded-[2rem] border shadow-sm">
+                <div class="text-[10px] font-black text-slate-400 uppercase mb-1">Total Plan</div>
+                <div id="metric-total" class="text-3xl font-black">0</div>
+            </div>
+            <div class="bg-white p-6 rounded-[2rem] border shadow-sm text-amber-500">
+                <div class="text-[10px] font-black uppercase mb-1 text-slate-400">Waiting</div>
+                <div id="metric-wait" class="text-3xl font-black">0</div>
+            </div>
+            <div class="bg-white p-6 rounded-[2rem] border shadow-sm text-blue-500">
+                <div class="text-[10px] font-black uppercase mb-1 text-slate-400">Running</div>
+                <div id="metric-run" class="text-3xl font-black">0</div>
+            </div>
+            <div class="bg-white p-6 rounded-[2rem] border shadow-sm text-emerald-500">
+                <div class="text-[10px] font-black uppercase mb-1 text-slate-400">Finished</div>
+                <div id="metric-done" class="text-3xl font-black">0</div>
             </div>
         </div>
 
-        <!-- Metrics -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 text-center md:text-left">
-            <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
-                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Plan</div>
-                <div id="metric-total" class="text-3xl font-black text-slate-800 tracking-tighter">0</div>
-            </div>
-            <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
-                <div class="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Waiting</div>
-                <div id="metric-wait" class="text-3xl font-black text-slate-800 tracking-tighter">0</div>
-            </div>
-            <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
-                <div class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Running</div>
-                <div id="metric-run" class="text-3xl font-black text-slate-800 tracking-tighter">0</div>
-            </div>
-            <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
-                <div class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Finished</div>
-                <div id="metric-done" class="text-3xl font-black text-slate-800 tracking-tighter">0</div>
-            </div>
-        </div>
-
-        <!-- Controls -->
-        <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-200 mb-6 flex flex-col md:flex-row gap-4 items-center">
-            <div class="relative flex-1 w-full text-center md:text-left">
-                <input id="search-input" type="text" placeholder="Cari Order No atau Customer..." class="w-full pl-6 pr-4 py-3 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium outline-none">
-            </div>
-            <div class="flex bg-slate-100 p-1.5 rounded-2xl w-full md:w-auto overflow-x-auto" id="filter-container">
-                <button onclick="setFilter('All')" class="filter-btn flex-1 px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-white text-indigo-600 shadow-sm">All</button>
-                <button onclick="setFilter('Wait')" class="filter-btn flex-1 px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all text-slate-500">Wait</button>
-                <button onclick="setFilter('Run')" class="filter-btn flex-1 px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all text-slate-500">Run</button>
-                <button onclick="setFilter('Finish')" class="filter-btn flex-1 px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all text-slate-500">Finish</button>
-            </div>
-        </div>
-
-        <!-- Table -->
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden min-h-[400px]">
+        <div class="bg-white rounded-3xl shadow-sm border overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-slate-50/50 border-b border-slate-100">
-                            <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Seq</th>
-                            <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Product Detail</th>
-                            <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Customer / Delivery</th>
-                            <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                        <tr class="bg-slate-50/50 border-b">
+                            <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase">Seq</th>
+                            <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase">Process Order</th>
+                            <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase">Customer / Delivery</th>
+                            <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase">Status</th>
                         </tr>
                     </thead>
                     <tbody id="table-body" class="divide-y divide-slate-50"></tbody>
                 </table>
             </div>
-            <div id="empty-state" class="py-24 text-center hidden font-bold text-slate-300">DATA TIDAK DITEMUKAN</div>
         </div>
     </main>
 
@@ -100,152 +73,77 @@
         const SHEET_CSV_URL = "https://google.com";
 
         let allData = [];
-        let currentFilter = 'All';
-        let currentSearch = '';
 
         async function fetchData() {
-            const btn = document.getElementById('refresh-btn');
             const icon = document.getElementById('refresh-icon');
             const btnText = document.getElementById('btn-text');
-            const errorAlert = document.getElementById('error-alert');
-
-            btn.disabled = true;
             icon.classList.add('refreshing');
             btnText.innerText = "MEMUAT...";
-            errorAlert.classList.add('hidden');
 
             try {
                 const response = await fetch(`${SHEET_CSV_URL}&t=${new Date().getTime()}`);
-                if (!response.ok) throw new Error("Gagal mengambil data. Pastikan Google Sheets sudah dipublikasikan.");
-                
                 const csvText = await response.text();
-                const rows = parseCSV(csvText);
                 
-                if (rows.length < 2) throw new Error("Data Sheet kosong.");
+                // Parsing CSV baris per baris
+                const rows = csvText.split(/\r?\n/).map(row => {
+                    return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.replace(/^"|"$/g, '').trim());
+                });
 
-                // Deteksi index secara otomatis berdasarkan nama kolom di Google Sheets
-                const headers = rows[0].map(h => h.trim().toUpperCase());
-                const idx = {
-                    seq: headers.findIndex(h => h.includes('SEQ')) !== -1 ? headers.findIndex(h => h.includes('SEQ')) : 0,
-                    order: headers.findIndex(h => h.includes('ORDER')) !== -1 ? headers.findIndex(h => h.includes('ORDER')) : 1,
-                    customer: headers.findIndex(h => h.includes('CUSTOMER')) !== -1 ? headers.findIndex(h => h.includes('CUSTOMER')) : 2,
-                    spec: headers.findIndex(h => h.includes('SPEC')) !== -1 ? headers.findIndex(h => h.includes('SPEC')) : 3,
-                    size: headers.findIndex(h => h.includes('SIZE')) !== -1 ? headers.findIndex(h => h.includes('SIZE')) : 4,
-                    delivery: headers.findIndex(h => h.includes('DELIV')) !== -1 ? headers.findIndex(h => h.includes('DELIV')) : 6,
-                    status: headers.findIndex(h => h.includes('STATUS')) !== -1 ? headers.findIndex(h => h.includes('STATUS')) : 7
-                };
+                // Slice(2) karena Baris 1 & 2 di Sheets Anda adalah Header/Judul
+                allData = rows.slice(2).filter(r => r[2] && r[2] !== "").map((row, i) => ({
+                    seq: row[0] || "-",
+                    orderNo: row[2] || "-",
+                    customer: row[18] || "N/A", // Kolom S
+                    delivery: row[3] || "-",   // Kolom D
+                    status: row[12] || "Wait", // Kolom M
+                    spec: row[7] || ""         // Kolom H
+                }));
 
-                allData = rows.slice(1).map((row, i) => ({
-                    id: i,
-                    seq: row[idx.seq] || "-",
-                    orderNo: row[idx.order] || "N/A",
-                    customer: row[idx.customer] || "Unknown",
-                    spec: row[idx.spec] || "",
-                    size: row[idx.size] || "",
-                    deliveryDate: row[idx.delivery] || "-",
-                    status: row[idx.status] || "Wait"
-                })).filter(item => item.orderNo !== "N/A");
-
-                document.getElementById('sync-status').innerText = `UPDATE: ${new Date().toLocaleTimeString()}`;
                 render();
                 updateMetrics();
+                document.getElementById('sync-status').innerText = "UPDATE: " + new Date().toLocaleTimeString();
             } catch (err) {
-                document.getElementById('error-message').innerText = err.message;
-                errorAlert.classList.remove('hidden');
+                console.error(err);
+                document.getElementById('sync-status').innerText = "ERROR KONEKSI";
             } finally {
-                btn.disabled = false;
                 icon.classList.remove('refreshing');
                 btnText.innerText = "REFRESH DATA";
             }
         }
 
-        function parseCSV(text) {
-            const rows = [];
-            let curRow = [];
-            let curCell = '';
-            let inQuote = false;
-            for (let i = 0; i < text.length; i++) {
-                const c = text[i];
-                if (c === '"') inQuote = !inQuote;
-                else if (c === ',' && !inQuote) { curRow.push(curCell.trim()); curCell = ''; }
-                else if ((c === '\n' || c === '\r') && !inQuote) {
-                    if (curCell || curRow.length > 0) {
-                        curRow.push(curCell.trim());
-                        rows.push(curRow);
-                        curCell = ''; curRow = [];
-                    }
-                } else curCell += c;
-            }
-            return rows;
-        }
-
         function render() {
             const tbody = document.getElementById('table-body');
-            const emptyState = document.getElementById('empty-state');
-            
-            const filtered = allData.filter(item => {
-                const matchFilter = currentFilter === 'All' || item.status.toLowerCase().includes(currentFilter.toLowerCase());
-                const matchSearch = item.orderNo.toLowerCase().includes(currentSearch.toLowerCase()) || 
-                                    item.customer.toLowerCase().includes(currentSearch.toLowerCase());
-                return matchFilter && matchSearch;
-            });
+            tbody.innerHTML = allData.map(item => {
+                let color = "bg-slate-100 text-slate-500";
+                if (item.status.toLowerCase().includes('run')) color = "bg-blue-100 text-blue-600";
+                if (item.status.toLowerCase().includes('finish') || item.status.toLowerCase().includes('done')) color = "bg-emerald-100 text-emerald-600";
+                if (item.status.toLowerCase().includes('wait') || item.status.toLowerCase().includes('no device')) color = "bg-amber-100 text-amber-600";
 
-            tbody.innerHTML = '';
-            if (filtered.length === 0) {
-                emptyState.classList.remove('hidden');
-            } else {
-                emptyState.classList.add('hidden');
-                filtered.forEach(item => {
-                    let color = "bg-slate-100 text-slate-600";
-                    if (item.status.toLowerCase().includes('run')) color = "bg-blue-100 text-blue-600";
-                    if (item.status.toLowerCase().includes('finish') || item.status.toLowerCase().includes('done')) color = "bg-emerald-100 text-emerald-600";
-                    if (item.status.toLowerCase().includes('wait')) color = "bg-amber-100 text-amber-600";
-
-                    const rowHtml = `
-                        <tr class="hover:bg-indigo-50/30 transition-all">
-                            <td class="px-6 py-4 font-mono text-slate-300">${item.seq}</td>
-                            <td class="px-6 py-4">
-                                <div class="font-black text-slate-800">${item.orderNo}</div>
-                                <div class="text-[10px] text-slate-400">${item.spec} ${item.size}</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-sm font-medium text-slate-700">${item.customer}</div>
-                                <div class="text-[10px] text-indigo-500 font-bold uppercase">${item.deliveryDate}</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase ${color}">${item.status}</span>
-                            </td>
-                        </tr>
-                    `;
-                    tbody.insertAdjacentHTML('beforeend', rowHtml);
-                });
-            }
+                return `
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-6 py-4 font-mono text-slate-300 text-sm font-bold">${item.seq}</td>
+                        <td class="px-6 py-4">
+                            <div class="font-black text-slate-800 text-sm">${item.orderNo}</div>
+                            <div class="text-[10px] text-slate-400 uppercase font-bold">${item.spec}</div>
+                        </td>
+                        <td class="px-6 py-4 text-sm font-medium">
+                            <div class="text-slate-700">${item.customer}</div>
+                            <div class="text-[10px] text-indigo-500 font-black mt-0.5">${item.delivery}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${color}">${item.status}</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         function updateMetrics() {
             document.getElementById('metric-total').innerText = allData.length;
-            document.getElementById('metric-wait').innerText = allData.filter(d => d.status.toLowerCase().includes('wait')).length;
+            document.getElementById('metric-wait').innerText = allData.filter(d => d.status.toLowerCase().includes('wait') || d.status.toLowerCase().includes('no device')).length;
             document.getElementById('metric-run').innerText = allData.filter(d => d.status.toLowerCase().includes('run')).length;
             document.getElementById('metric-done').innerText = allData.filter(d => d.status.toLowerCase().includes('finish') || d.status.toLowerCase().includes('done')).length;
         }
-
-        function setFilter(f) {
-            currentFilter = f;
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('bg-white', 'text-indigo-600', 'shadow-sm');
-                btn.classList.add('text-slate-500');
-                if(btn.innerText.includes(f)) {
-                    btn.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
-                    btn.classList.remove('text-slate-500');
-                }
-            });
-            render();
-        }
-
-        document.getElementById('search-input').addEventListener('input', (e) => {
-            currentSearch = e.target.value;
-            render();
-        });
 
         window.onload = fetchData;
     </script>
