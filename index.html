@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SL1 MONITOR - PT HSSI</title>
     
-    <!-- Tailwind CSS (Sudah Benar) -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- PERBAIKAN: Link Google Fonts yang Lengkap -->
+    <!-- PERBAIKAN FINAL: Link Google Fonts yang Lengkap -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://gstatic.com" crossorigin>
     <link href="https://googleapis.com" rel="stylesheet">
@@ -24,24 +24,24 @@
 
 <body class="bg-[#f0f4f0] text-slate-900 min-h-screen">
 
-   <!-- Header Panel yang Diperbaiki -->
+<!-- Header Panel yang Diperbaiki (Struktur Sejajar & Logo Valid) -->
 <header class="bg-[#064e3b] text-white p-4 sticky top-0 z-50 shadow-xl border-b border-white/10">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
-        <!-- Grup Logo & Nama (Menggunakan flex agar sejajar horizontal) -->
+        <!-- Grup Logo & Nama -->
         <div class="flex items-center space-x-4">
-            <!-- Logo HSSI Bentuk Diamond (Presisi sesuai gambar kamu) -->
-            <div class="relative flex items-center justify-center bg-white p-1 rounded-lg shadow-md" style="width: 70px; height: 45px;">
+            <!-- Logo HSSI Diamond (Perbaikan xmlns) -->
+            <div class="flex items-center justify-center bg-white p-1 rounded-lg shadow-md" style="width: 70px; height: 45px;">
                 <svg viewBox="0 0 100 60" fill="none" xmlns="http://w3.org" class="w-full h-full">
                     <!-- Bingkai Diamond Hijau -->
-                    <path d="M50 5 L92 30 L50 55 L8 30 Z" stroke="#16a34a" stroke-width="5" fill="none" />
-                    <!-- Teks HSSI di Tengah -->
+                    <path d="M50 5 L92 30 L50 55 L8 30 Z" stroke="#16a34a" stroke-width="6" fill="none" />
+                    <!-- Teks HSSI -->
                     <text x="50%" y="60%" dominant-baseline="middle" text-anchor="middle" fill="#16a34a" font-family="Arial, sans-serif" font-weight="900" font-size="24">HSSI</text>
                 </svg>
             </div>
             
-            <!-- Teks Nama Perusahaan -->
-            <div class="flex flex-col">
-                <h1 class="text-lg md:text-xl font-black tracking-tight leading-tight uppercase">
+            <!-- Teks Nama Perusahaan (leading-tight agar tidak berjarak terlalu jauh) -->
+            <div class="flex flex-col leading-tight">
+                <h1 class="text-lg md:text-xl font-black tracking-tight uppercase">
                     PT HANWA STEEL SERVICE INDONESIA
                 </h1>
                 <p id="sync-status" class="text-[10px] text-emerald-300 font-bold tracking-[0.15em] uppercase">
@@ -52,7 +52,10 @@
         
         <!-- Tombol Refresh -->
         <button onclick="fetchData()" id="refresh-btn" class="hidden md:flex items-center bg-emerald-600 hover:bg-emerald-500 px-5 py-2 rounded-full text-[11px] font-black transition-all active:scale-95 border border-emerald-400/50">
-            <svg id="refresh-icon" class="mr-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>
+            <svg id="refresh-icon" class="mr-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
+                <path d="M21 3v5h-5"></path>
+            </svg>
             REFRESH DATA
         </button>
     </div>
