@@ -85,38 +85,38 @@
             </div>
         </div>
 
-        <!-- Tabel Monitoring -->
-        <div class="bg-white rounded-[2rem] shadow-xl overflow-hidden border border-emerald-100">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="bg-emerald-50 text-emerald-800 border-b border-emerald-100">
-                            <th class="px-6 py-4 text-[11px] font-black uppercase">Seq</th>
-                            <th class="px-6 py-4 text-[11px] font-black uppercase">Product Information</th>
-                            <th class="px-6 py-4 text-[11px] font-black uppercase">Customer Detail</th>
-                            <th class="px-6 py-4 text-center text-[11px] font-black uppercase">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body" class="divide-y divide-slate-100">
-                        <!-- Contoh Row (Nanti akan diisi otomatis oleh JS kamu) -->
-                        <tr class="hover:bg-emerald-50/30 transition-colors">
-                            <td class="px-6 py-4 font-bold text-slate-400">1</td>
-                            <td class="px-6 py-4">
-                                <div class="font-extrabold text-slate-800">25-04464-00-00</div>
-                                <div class="text-[11px] text-slate-500 uppercase">SPCC | 1.000 X 1219.00 X COIL | 6.79 KG</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="font-bold text-slate-700 text-sm">PT. SHINWA PACKAGE INDONESIA</div>
-                                <div class="text-[10px] text-emerald-600 font-bold uppercase">DELIV: ASAP</div>
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                <span class="px-3 py-1 bg-amber-100 text-amber-600 text-[10px] font-black rounded-full uppercase">Waiting</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+    <!-- Tabel Monitoring yang Diperbaiki -->
+    <div class="bg-white rounded-[2rem] shadow-xl overflow-hidden border border-emerald-100">
+        <div class="overflow-x-auto">
+            <table class="w-full table-fixed"> <!-- Gunakan table-fixed agar lebar kolom konsisten -->
+                <thead>
+                    <tr class="bg-emerald-50 text-emerald-800 border-b border-emerald-100">
+                        <th class="w-16 px-6 py-4 text-[11px] font-black uppercase text-center">Seq</th>
+                        <th class="w-2/5 px-6 py-4 text-[11px] font-black uppercase">Product Information</th>
+                        <th class="w-2/5 px-6 py-4 text-[11px] font-black uppercase">Customer Detail</th>
+                        <th class="w-32 px-6 py-4 text-center text-[11px] font-black uppercase">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body" class="divide-y divide-slate-100">
+                    <tr class="hover:bg-emerald-50/30 transition-colors">
+                        <td class="px-6 py-8 font-bold text-slate-300 text-3xl text-center italic">1</td>
+                        <td class="px-6 py-4">
+                            <div class="font-extrabold text-slate-800 text-lg">26-04464-00-00</div>
+                            <div class="text-[11px] text-slate-500 uppercase tracking-tight">SPCC | 1.000 X 1219.00 X COIL | 6.79 KG</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="font-bold text-slate-700 text-sm">PT. SHINWA PACKAGE INDONESIA</div>
+                            <div class="text-[10px] text-blue-600 font-bold uppercase">DELIV: DELV ASAP</div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="px-4 py-1 bg-amber-50 text-amber-500 border border-amber-200 text-[10px] font-black rounded-full uppercase">Waiting</span>
+                        </td>
+                    </tr>
+                    <!-- Ulangi struktur <tr> untuk data lainnya -->
+                </tbody>
+            </table>
         </div>
+    </div>
     </main>
 
 </body>
