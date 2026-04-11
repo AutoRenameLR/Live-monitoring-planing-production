@@ -90,7 +90,7 @@
 
     <script>
         // TAUTAN ASLI ANDA
-        const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS5oxW4v4lVSiKmn8vUwaYIuzRDOoTCOhu0jB9zk6_WDM9ar1yAiPwrIZGUFvf3zXAqWcjnCaUyRKAu/pub?output=csv";
+        const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS5oxW4v4lVSiKmn8vUwaYIuzRDOoTCOhu0jB9zk6_WDM9ar1yAiPwrIZGUFvf3zXAqWcjnCaUyRKAu/pub?output=csv";
 
         let allData = [];
 
@@ -98,7 +98,7 @@
             const icon = document.getElementById('refresh-icon');
             icon.classList.add('refreshing');
             try {
-                const response = await fetch(SHEET_URL + "&t=" + Date.now());
+                const response = await fetch(SHEET_CSV_URL + "&t=" + Date.now());
                 const csvText = await response.text();
                 
                 const rows = csvText.split(/\r?\n/).filter(l => l.trim() !== "").map(row => {
