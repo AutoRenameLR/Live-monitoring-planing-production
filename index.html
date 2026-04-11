@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SL1 Cloud Monitor - Dashboard</title>
+    <title>SL1 Cloud Monitor - Live Dashboard</title>
+    <!-- Tailwind CSS & Fonts -->
     <script src="https://tailwindcss.com"></script>
     <link href="https://googleapis.com" rel="stylesheet">
     <style>
@@ -14,6 +15,7 @@
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen">
 
+    <!-- Header -->
     <header class="bg-slate-900 text-white p-4 sticky top-0 z-30 shadow-xl border-b border-white/5">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3">
@@ -25,34 +27,48 @@
                     <p id="sync-status" class="text-[10px] text-slate-400 font-bold tracking-widest mt-1 uppercase">SINKRONISASI...</p>
                 </div>
             </div>
-            <button onclick="fetchData()" id="refresh-btn" class="flex items-center bg-slate-800 hover:bg-indigo-600 px-4 py-2 rounded-xl text-[11px] font-black border border-slate-700">
+            <button onclick="fetchData()" id="refresh-btn" class="flex items-center bg-slate-800 hover:bg-indigo-600 px-4 py-2 rounded-xl text-[11px] font-black border border-slate-700 transition-all active:scale-95">
                 <svg id="refresh-icon" class="mr-2" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>
-                <span>REFRESH DATA</span>
+                <span id="btn-text">REFRESH DATA</span>
             </button>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto p-4 md:p-6">
+        <!-- Dashboard Metrics -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white p-6 rounded-[2rem] border shadow-sm"><div class="text-[10px] font-black text-slate-400 uppercase mb-1">Total Plan</div><div id="metric-total" class="text-3xl font-black">0</div></div>
-            <div class="bg-white p-6 rounded-[2rem] border shadow-sm text-amber-500"><div class="text-[10px] font-black text-slate-400 uppercase mb-1">Waiting</div><div id="metric-wait" class="text-3xl font-black">0</div></div>
-            <div class="bg-white p-6 rounded-[2rem] border shadow-sm text-blue-500"><div class="text-[10px] font-black text-slate-400 uppercase mb-1">Running</div><div id="metric-run" class="text-3xl font-black">0</div></div>
-            <div class="bg-white p-6 rounded-[2rem] border shadow-sm text-emerald-500"><div class="text-[10px] font-black text-slate-400 uppercase mb-1">Finished</div><div id="metric-done" class="text-3xl font-black">0</div></div>
+            <div class="bg-white p-6 rounded-[2rem] border shadow-sm">
+                <div class="text-[10px] font-black text-slate-400 uppercase mb-1">Total Plan</div>
+                <div id="metric-total" class="text-3xl font-black">0</div>
+            </div>
+            <div class="bg-white p-6 rounded-[2rem] border shadow-sm text-amber-500">
+                <div class="text-[10px] font-black text-slate-400 uppercase mb-1">Waiting</div>
+                <div id="metric-wait" class="text-3xl font-black">0</div>
+            </div>
+            <div class="bg-white p-6 rounded-[2rem] border shadow-sm text-blue-500">
+                <div class="text-[10px] font-black text-slate-400 uppercase mb-1">Running</div>
+                <div id="metric-run" class="text-3xl font-black">0</div>
+            </div>
+            <div class="bg-white p-6 rounded-[2rem] border shadow-sm text-emerald-500">
+                <div class="text-[10px] font-black text-slate-400 uppercase mb-1">Finished</div>
+                <div id="metric-done" class="text-3xl font-black">0</div>
+            </div>
         </div>
 
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+        <!-- Data Table -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden min-h-[400px]">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-slate-50/50 border-b font-black text-[10px] text-slate-400 uppercase">
-                            <th class="px-6 py-5">Seq</th>
-                            <th class="px-6 py-5">Process Order</th>
-                            <th class="px-6 py-5">Customer / Delivery</th>
-                            <th class="px-6 py-5">Status</th>
+                        <tr class="bg-slate-50/50 border-b">
+                            <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Seq</th>
+                            <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Process Order</th>
+                            <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Customer / Delivery</th>
+                            <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                         </tr>
                     </thead>
                     <tbody id="table-body" class="divide-y divide-slate-50">
-                        <tr><td colspan="4" class="p-10 text-center text-slate-400 italic font-bold">Menyambungkan ke Google Sheets...</td></tr>
+                        <tr><td colspan="4" class="p-10 text-center text-slate-400 italic">Menghubungkan ke database Google Sheets...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -60,41 +76,49 @@
     </main>
 
     <script>
-        // TAUTAN FINAL (Sudah diperbaiki dari kesalahan typo di gambar konsol Anda)
-        const CSV_URL = "https://google.com";
+        // TAUTAN ASLI ANDA (SUDAH DIPERBAIKI TYPO-NYA)
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS5oxW4v4lVSiKmn8vUwaYIuzRDOoTCOhu0jB9zk6_WDM9ar1yAiPwrIZGUFvf3zXAqWcjnCaUyRKAu/pub?output=csv";
 
         let allData = [];
 
         async function fetchData() {
             const icon = document.getElementById('refresh-icon');
+            const btnText = document.getElementById('btn-text');
             icon.classList.add('refreshing');
+            btnText.innerText = "LOADING...";
+
             try {
+                // Menggunakan &t= karena URL di atas sudah mengandung tanda tanya (?)
                 const response = await fetch(CSV_URL + "&t=" + Date.now());
-                if (!response.ok) throw new Error("Gagal akses.");
-                const csvText = await response.text();
+                if (!response.ok) throw new Error("Respons gagal");
                 
-                const rows = csvText.split(/\r?\n/).filter(l => l.trim() !== "").map(row => {
+                const csvText = await response.text();
+                const rows = csvText.split(/\r?\n/).filter(line => line.trim() !== "").map(row => {
+                    // Parser untuk menangani koma di dalam tanda kutip
                     return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.replace(/^"|"$/g, '').trim());
                 });
 
-                // Mengambil 18 data mulai dari baris ke-3 (index 2)
+                // slice(2) membuang 2 baris header agar tepat 18 data yang muncul
                 allData = rows.slice(2).map((row, i) => ({
-                    seq: row[0] || "-",
-                    orderNo: row[2] || "-",
-                    customer: row[18] || "-",
-                    delivery: row[3] || "-",
-                    status: row[12] || "Wait",
-                    spec: row[7] || ""
+                    seq: row[0] || "-",        // Kolom A
+                    orderNo: row[2] || "-",    // Kolom C
+                    customer: row[18] || "-",  // Kolom S
+                    delivery: row[3] || "-",   // Kolom D
+                    status: row[12] || "Wait", // Kolom M
+                    spec: row[7] || ""         // Kolom H
                 })).filter(item => item.orderNo !== "-" && item.orderNo !== "");
 
                 render();
                 updateMetrics();
                 document.getElementById('sync-status').innerText = "UPDATE: " + new Date().toLocaleTimeString();
+
             } catch (err) {
+                console.error("Fetch Error:", err);
                 document.getElementById('sync-status').innerText = "KONEKSI GAGAL";
-                document.getElementById('table-body').innerHTML = `<tr><td colspan="4" class="p-10 text-center text-red-500 font-bold uppercase">Error: Tautan Sheets tidak valid atau diblokir.</td></tr>`;
+                document.getElementById('table-body').innerHTML = `<tr><td colspan="4" class="p-10 text-center text-red-500 font-bold uppercase tracking-widest">Gagal mengambil data. Pastikan URL benar dan publikasi CSV aktif.</td></tr>`;
             } finally {
                 icon.classList.remove('refreshing');
+                btnText.innerText = "REFRESH DATA";
             }
         }
 
@@ -112,13 +136,17 @@
                         <td class="px-6 py-4 font-mono text-slate-300 text-sm font-bold">${item.seq}</td>
                         <td class="px-6 py-4">
                             <div class="font-black text-slate-800 text-sm">${item.orderNo}</div>
-                            <div class="text-[10px] text-slate-400 font-bold uppercase">${item.spec}</div>
+                            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">${item.spec}</div>
                         </td>
-                        <td class="px-6 py-4 text-sm">
-                            <div class="font-semibold text-slate-700">${item.customer}</div>
-                            <div class="text-[10px] text-indigo-500 font-black uppercase">${item.delivery}</div>
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-semibold text-slate-700">${item.customer}</div>
+                            <div class="text-[10px] text-indigo-500 font-black uppercase mt-0.5">${item.delivery}</div>
                         </td>
-                        <td class="px-6 py-4"><span class="px-3 py-1 rounded-xl text-[10px] font-black uppercase ${color}">${item.status}</span></td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider ${color}">
+                                ${item.status}
+                            </span>
+                        </td>
                     </tr>
                 `;
             }).join('');
