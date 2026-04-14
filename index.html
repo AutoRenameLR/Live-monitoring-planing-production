@@ -3,252 +3,445 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SL1 MONITOR - PT HSSI</title>
-    
-    <!-- Tailwind CSS CDN -->
+    <title>SL1 Cloud Monitor - HSSI</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- PERBAIKAN FINAL: Link Google Fonts yang Lengkap -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://gstatic.com" crossorigin>
-    <link href="https://googleapis.com" rel="stylesheet">
-    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .refreshing { animation: spin-slow 1s linear infinite; }
-        .card-hover { transition: all 0.3s ease; }
-        .card-hover:hover { transform: translateY(-5px); }
+        .bg-hssi-green { background-color: #00843d; }
+        /* Animasi masuk untuk modal dan toast */
+        @keyframes slideUp { from { transform: translate(-50%, 100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+        .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
     </style>
 </head>
+<body class="bg-[#f1f5f9] text-slate-900 min-h-screen">
 
-<body class="bg-[#f0f4f0] text-slate-900 min-h-screen">
-
-<header class="bg-[#064e3b] text-white p-4 sticky top-0 z-50 shadow-xl border-b border-white/10">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-        
-        <!-- Grup Kiri: Logo + Nama (Menggunakan flex-1 untuk menjaga stabilitas) -->
-        <div class="flex items-center space-x-4 flex-shrink-0">
-            <!-- Container Logo Fixed Size agar tidak goyang -->
-            <div class="flex-shrink-0 flex items-center justify-center bg-white p-1 rounded-lg shadow-md" style="width: 70px; height: 45px;">
-                <svg viewBox="0 0 100 60" fill="none" xmlns="http://w3.org" class="w-full h-full">
-                    <path d="M50 5 L92 30 L50 55 L8 30 Z" stroke="#16a34a" stroke-width="6" fill="none" />
-                    <text x="50" y="38" text-anchor="middle" fill="#16a34a" font-family="Arial, sans-serif" font-weight="900" font-size="20">HSSI</text>
-                </svg>
+    <!-- Header / Navbar -->
+    <header class="bg-[#1e293b] text-white p-4 sticky top-0 z-50 shadow-lg border-b-[3px] border-[#00843d]">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <!-- Logo & Title -->
+            <div class="flex items-center space-x-4">
+                <div class="bg-white p-1 rounded-lg w-16 h-10 flex items-center justify-center overflow-hidden">
+                    <img src="HSSI_LOGO-removebg-preview.png" alt="HSSI" class="h-full object-contain" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'text-[10px] font-black text-[#00843d]\'>HSSI</span>';">
+                </div>
+                <div>
+                    <h1 class="text-xl font-black italic tracking-tight uppercase leading-none">SL1 CLOUD MONITOR</h1>
+                    <p id="sync-status" class="text-[10px] text-[#22c55e] font-bold tracking-widest mt-1 uppercase italic">TERHUBUNG: MENCARI...</p>
+                </div>
             </div>
-            
-            <!-- Teks Nama Perusahaan -->
-            <div class="flex flex-col justify-center min-w-0">
-                <h1 class="text-sm md:text-xl font-black tracking-tight uppercase truncate">
-                    PT HANWA STEEL SERVICE INDONESIA
-                </h1>
-                <p id="sync-status" class="text-[10px] text-emerald-300 font-bold tracking-[0.15em] uppercase">
-                    SINKRON: 1:12:22 AM
-                </p>
+
+            <!-- Controls -->
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <div class="flex bg-white/5 p-1 rounded-xl items-center border border-white/10 flex-1 md:w-80">
+                    <input type="text" id="manualInput" placeholder="Scan / Ketik Manual..." class="bg-transparent border-none text-xs font-bold px-3 py-1.5 focus:ring-0 outline-none w-full placeholder:text-slate-500 text-white" onkeypress="if(event.key === 'Enter') processManualInput()">
+                    <button onclick="toggleScanner()" class="bg-[#00843d] hover:bg-emerald-600 p-2 rounded-lg transition-colors flex items-center gap-2 text-[10px] font-black uppercase whitespace-nowrap">
+                        <i data-lucide="camera" class="w-3.5 h-3.5"></i> SCAN
+                    </button>
+                </div>
+                <button onclick="fetchData()" id="refreshBtn" class="bg-slate-700 hover:bg-slate-600 p-2.5 rounded-xl border border-white/10 transition-all active:scale-95">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                </button>
             </div>
         </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-6">
         
-        <!-- Grup Kanan: Tombol Refresh (Menggunakan flex-shrink-0 agar tidak tertekuk) -->
-        <div class="flex-shrink-0 ml-4">
-            <button onclick="location.reload()" id="refresh-btn" class="hidden md:flex items-center bg-emerald-600 hover:bg-emerald-500 px-5 py-2 rounded-full text-[11px] font-black transition-all active:scale-95 border border-emerald-400/50 whitespace-nowrap">
-                <svg id="refresh-icon" class="mr-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                    <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
-                    <path d="M21 3v5h-5"></path>
-                </svg>
-                REFRESH DATA
+        <!-- Scanner Overlay -->
+        <div id="scanner-container" class="hidden mb-6 bg-black rounded-3xl overflow-hidden border-4 border-[#00843d] shadow-2xl relative animate-fade-in">
+            <div id="reader" style="width: 100%;"></div>
+            <button onclick="toggleScanner()" class="absolute top-4 right-4 bg-rose-600 text-white p-2 rounded-full shadow-lg z-10 hover:bg-rose-700 transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
             </button>
         </div>
 
-    </div>
-</header>
-
-
-
-    <main class="max-w-7xl mx-auto p-4 lg:p-8">
-        <!-- Metrik Status (Sudah Benar) -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 text-left">
-            <div class="bg-white p-6 rounded-[2rem] shadow-sm border-l-8 border-emerald-500">
-                <div class="text-[10px] font-black text-slate-400 uppercase mb-1">Total Plan</div>
-                <div class="text-3xl font-black text-slate-800">18</div>
+        <!-- Dashboard Stats -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center">
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Plan</div>
+                <div id="stat-total" class="text-2xl font-black text-slate-800 tracking-tighter">0</div>
             </div>
-            <div class="bg-white p-6 rounded-[2rem] shadow-sm border-l-8 border-amber-400">
-                <div class="text-[10px] font-black text-slate-400 uppercase mb-1">Waiting</div>
-                <div class="text-3xl font-black text-amber-500">8</div>
+            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center">
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Waiting</div>
+                <div id="stat-waiting" class="text-2xl font-black text-amber-500 tracking-tighter">0</div>
             </div>
-            <div class="bg-white p-6 rounded-[2rem] shadow-sm border-l-8 border-blue-500">
-                <div class="text-[10px] font-black text-slate-400 uppercase mb-1">Running</div>
-                <div class="text-3xl font-black text-blue-600">10</div>
+            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center">
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Finished</div>
+                <div id="stat-finished" class="text-2xl font-black text-emerald-500 tracking-tighter">0</div>
             </div>
-            <div class="bg-white p-6 rounded-[2rem] shadow-sm border-l-8 border-slate-200">
-                <div class="text-[10px] font-black text-slate-400 uppercase mb-1">Finished</div>
-                <div class="text-3xl font-black text-slate-300">0</div>
+            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center">
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">With Issue</div>
+                <div id="stat-issue" class="text-2xl font-black text-rose-500 tracking-tighter">0</div>
             </div>
         </div>
-    
-        <!-- HEADER KOLOM: Pastikan grid-cols-12 -->
-        <div class="hidden lg:grid grid-cols-12 gap-4 px-10 mb-4 text-left">
-            <div class="col-span-1 text-[11px] font-black text-emerald-900/40 uppercase">Seq</div>
-            <div class="col-span-5 text-[11px] font-black text-emerald-900/40 uppercase">Product Information</div>
-            <div class="col-span-4 text-[11px] font-black text-emerald-900/40 uppercase">Customer Detail</div>
-            <div class="col-span-2 text-center text-[11px] font-black text-emerald-900/40 uppercase">Status</div>
-        </div>
-    
-        <!-- LIST DATA: Setiap baris adalah DIV mandiri -->
-        <div class="space-y-4">
-            <!-- Baris 1 -->
-            <div class="bg-white rounded-[1.5rem] shadow-sm p-6 grid grid-cols-12 gap-4 items-center border border-white">
-                <div class="col-span-1">
-                    <span class="text-5xl font-black text-slate-50 italic opacity-50">1</span>
-                </div>
-                <div class="col-span-5 text-left">
-                    <div class="font-extrabold text-slate-800 text-lg leading-none mb-1">26-04464-00-00</div>
-                    <div class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">SPCC | 1.000 X 1219.00 X COIL | 6.79 KG</div>
-                </div>
-                <div class="col-span-4 text-left border-l border-slate-50 pl-4">
-                    <div class="font-bold text-slate-700 text-[13px] mb-1">PT. SHINWA PACKAGE INDONESIA</div>
-                    <div class="text-[10px] text-blue-500 font-black uppercase">DELIV: DELV ASAP</div>
-                </div>
-                <div class="col-span-2 flex justify-center">
-                    <span class="bg-amber-50 text-amber-500 border border-amber-100 px-6 py-2 text-[10px] font-black rounded-full uppercase tracking-tighter">Waiting</span>
-                </div>
+
+        <!-- Navigation & Search -->
+        <div class="bg-white p-4 rounded-[1.5rem] shadow-sm border border-slate-200 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div class="flex bg-slate-100 p-1 rounded-2xl w-full md:w-auto">
+                <button onclick="setTab('progress')" id="tab-progress" class="flex-1 md:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 bg-white text-slate-900 shadow-sm border border-slate-200">
+                    <i data-lucide="clock" class="w-3.5 h-3.5"></i> PROGRESS LIST
+                </button>
+                <button onclick="setTab('finished')" id="tab-finished" class="flex-1 md:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 text-slate-500 hover:text-slate-700">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> FINISHED
+                </button>
             </div>
-    
-            <!-- Baris 2 -->
-            <div class="bg-white rounded-[1.5rem] shadow-sm p-6 grid grid-cols-12 gap-4 items-center border border-white">
-                <div class="col-span-1">
-                    <span class="text-5xl font-black text-slate-50 italic opacity-50">2</span>
-                </div>
-                <div class="col-span-5 text-left">
-                    <div class="font-extrabold text-slate-800 text-lg leading-none mb-1">26-04303-00-00</div>
-                    <div class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">JIS G3141 SPCC-SD | 0.700 X 914.00 X COIL | 3,541 KG</div>
-                </div>
-                <div class="col-span-4 text-left border-l border-slate-50 pl-4">
-                    <div class="font-bold text-slate-700 text-[13px] mb-1">PT. PADMA SOODE INDONESIA</div>
-                    <div class="text-[10px] text-blue-500 font-black uppercase">DELIV: DELV ASAP</div>
-                </div>
-                <div class="col-span-2 flex justify-center">
-                    <span class="bg-amber-50 text-amber-500 border border-amber-100 px-6 py-2 text-[10px] font-black rounded-full uppercase tracking-tighter">Waiting</span>
-                </div>
+            
+            <div class="relative w-full md:w-80">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Cari No Order / CC / Customer..." class="w-full pl-12 pr-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold outline-none ring-1 ring-slate-200 focus:ring-emerald-500 transition-all">
+            </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="bg-white rounded-[1.5rem] shadow-xl border border-slate-200 overflow-hidden min-h-[500px]">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[1000px]">
+                    <thead>
+                        <tr class="bg-slate-50/50 border-b border-slate-100">
+                            <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Seq</th>
+                            <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Order Info</th>
+                            <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">CC No (Otomatis)</th>
+                            <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Laporan Kendala</th>
+                            <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
+                            <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="divide-y divide-slate-50">
+                        <!-- Data will be populated here -->
+                        <tr>
+                            <td colspan="6" class="py-20 text-center text-slate-400 font-bold uppercase tracking-widest">Memuat Data...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </main>
 
-    
-</body>
+    <!-- Modal Laporan Kendala -->
+    <div id="modal-kendala" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-8 border border-slate-200 animate-fade-in relative">
+            <h3 class="text-xl font-black italic text-slate-800 uppercase tracking-tight mb-6 flex items-center gap-2">
+                <i data-lucide="alert-triangle" class="text-rose-500 w-6 h-6"></i> Laporkan Kendala
+            </h3>
+            
+            <div class="mb-6 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                <p class="text-[10px] font-black text-emerald-600 uppercase mb-1">CC No / Order Info</p>
+                <p id="modal-cc-info" class="text-sm font-bold text-slate-700">-</p>
+            </div>
+
+            <div class="relative mb-8">
+                <select id="kendala-select" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold appearance-none focus:ring-2 focus:ring-rose-500 outline-none pr-10">
+                    <option value="" disabled selected>Pilih Jenis Kendala</option>
+                    <option value="Material Belum Datang">Material Belum Datang</option>
+                    <option value="Mesin Breakdown">Mesin Breakdown</option>
+                    <option value="Menunggu Crane">Menunggu Crane</option>
+                    <option value="Ganti Pisau / Setup">Ganti Pisau / Setup</option>
+                    <option value="Istirahat / Shift Change">Istirahat / Shift Change</option>
+                </select>
+                <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none w-5 h-5"></i>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="closeModal()" class="py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-[12px] uppercase tracking-widest hover:bg-slate-200 transition-all">Batal</button>
+                <button onclick="saveKendala()" class="py-4 bg-rose-600 text-white rounded-2xl font-black text-[12px] uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-200">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 px-8 py-4 rounded-2xl font-black text-[11px] shadow-2xl z-[110] flex items-center gap-3 uppercase tracking-widest hidden animate-slide-up">
+        <i id="toast-icon" data-lucide="check-circle" class="w-4 h-4"></i>
+        <span id="toast-message"></span>
+    </div>
 
     <script>
-        const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS5oxW4v4lVSiKmn8vUwaYIuzRDOoTCOhu0jB9zk6_WDM9ar1yAiPwrIZGUFvf3zXAqWcjnCaUyRKAu/pub?output=csv";
-    
-        let allData = [];
-    
+        const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS5oxW4v4lVSiKmn8vUwaYIuzRDOoTCOhu0jB9zk6_WDM9ar1yAiPwrIZGUFvf3zXAqWcjnCaUyRKAu/pub?output=csv";
+        
+        let appData = [];
+        let completedItems = [];
+        let activeTab = 'progress';
+        let searchQuery = '';
+        let showScanner = false;
+        let html5QrCode = null;
+        let selectedItemId = null;
+
+        // Initialize Icons
+        lucide.createIcons();
+
         async function fetchData() {
-            const icon = document.getElementById('refresh-icon');
-            const sync = document.getElementById('sync-status');
-            if (icon) icon.classList.add('refreshing');
-    
+            const refreshBtn = document.getElementById('refreshBtn').querySelector('svg');
+            refreshBtn.classList.add('animate-spin', 'text-emerald-400');
+            
             try {
-                const response = await fetch(`${SHEET_CSV}&t=${Date.now()}`);
-                const text = await response.text();
+                const response = await fetch(`${SHEET_CSV_URL}&t=${new Date().getTime()}`);
+                if (!response.ok) throw new Error("Gagal akses data");
                 
-                const rows = text.split(/\r?\n/).map(row => {
-                    return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.replace(/^"|"$/g, '').trim());
-                });
-    
-                const headerIdx = rows.findIndex(r => r.some(cell => cell.toUpperCase().includes("SEQ")));
-                if (headerIdx === -1) throw new Error("Header SEQ tidak ditemukan");
-    
-                const headers = rows[headerIdx].map(h => h.toUpperCase());
-                const colMap = {
+                const csvText = await response.text();
+                const rows = parseCSV(csvText);
+                
+                const headerIdx = rows.findIndex(r => r.some(c => c?.toUpperCase().includes('SEQ') || c?.toUpperCase().includes('ORDER')));
+                if (headerIdx === -1) throw new Error("Header tidak ditemukan");
+
+                const headers = rows[headerIdx].map(h => h.toUpperCase().trim().replace(/\s/g, '_'));
+                
+                const idx = {
                     seq: headers.findIndex(h => h.includes('SEQ')),
-                    order: headers.findIndex(h => h.includes('ORDER NO')),
-                    deliv: headers.findIndex(h => h.includes('DELIV')),
+                    order: headers.findIndex(h => h.includes('ORDER') || h.includes('PROCESS_ORDER')),
+                    customer: headers.findIndex(h => h.includes('CUSTOMER')),
+                    ccNo: headers.findIndex(h => h.includes('PACKING')), // Otomatis mapping CC No dari "Packing No."
                     spec: headers.findIndex(h => h.includes('SPEC')),
                     size: headers.findIndex(h => h.includes('SIZE')),
-                    weight: headers.findIndex(h => h.includes('WEIGHT')),
-                    customer: headers.findIndex(h => h.includes('CUSTOMER')),
-                    status: headers.findIndex(h => h.includes('NEXT'))
                 };
-    
-                allData = rows.slice(headerIdx + 1)
-                    .filter(r => r[colMap.seq] && !isNaN(parseInt(r[colMap.seq])))
-                    .map(r => ({
-                        seq: r[colMap.seq] || "-",
-                        order: r[colMap.order] || "-",
-                        deliv: r[colMap.deliv] || "-",
-                        spec: r[colMap.spec] || "-",
-                        size: r[colMap.size] || "-",
-                        weight: r[colMap.weight] || "0",
-                        customer: r[colMap.customer] || "N/A",
-                        isRunning: r[colMap.status] && r[colMap.status].trim().length > 0
+
+                const newData = rows.slice(headerIdx + 1)
+                    .filter(row => row[idx.order] && row[idx.order].trim() !== "")
+                    .map((row, i) => ({
+                        id: `row-${i}-${row[idx.order]}`,
+                        seq: row[idx.seq] || (i + 1).toString(),
+                        orderNo: row[idx.order] || "N/A",
+                        customer: row[idx.customer] || "Unknown",
+                        ccNo: idx.ccNo !== -1 ? (row[idx.ccNo] || "") : "",
+                        spec: row[idx.spec] || "",
+                        size: row[idx.size] || "",
+                        status: "WAITING",
+                        kendala: ""
                     }));
-    
-                render();
-                updateMetrics();
-                if (sync) sync.innerText = "SINKRON: " + new Date().toLocaleTimeString();
-    
-            } catch (e) {
-                console.error(e);
-                if (sync) sync.innerText = "GAGAL SINKRONISASI";
+
+                // Filter out items that are already completed
+                appData = newData.filter(item => !completedItems.some(c => c.orderNo === item.orderNo));
+                
+                document.getElementById('sync-status').innerText = `TERHUBUNG: ${new Date().toLocaleTimeString()}`;
+                renderTable();
+                updateStats();
+            } catch (err) {
+                console.error(err);
+                showToast("Gagal mengambil data Sheet", "error");
             } finally {
-                if (icon) icon.classList.remove('refreshing');
+                refreshBtn.classList.remove('animate-spin', 'text-emerald-400');
             }
         }
-    
-        function render() {
-            const container = document.getElementById('table-body');
-            if (!container) return; // Mencegah error null
-    
-            if (allData.length === 0) {
-                container.innerHTML = `<div class="p-24 text-center text-slate-400 font-bold uppercase tracking-widest bg-white rounded-3xl">Data Tidak Ditemukan</div>`;
-                return;
+
+        function parseCSV(text) {
+            const rows = [];
+            let curRow = [];
+            let curCell = '';
+            let inQuote = false;
+            for (let i = 0; i < text.length; i++) {
+                const c = text[i];
+                if (c === '"') {
+                    if (inQuote && text[i+1] === '"') { curCell += '"'; i++; }
+                    else inQuote = !inQuote;
+                }
+                else if (c === ',' && !inQuote) { curRow.push(curCell.trim()); curCell = ''; }
+                else if ((c === '\n' || c === '\r') && !inQuote) {
+                    if (curCell || curRow.length > 0) {
+                        curRow.push(curCell.trim()); rows.push(curRow);
+                        curCell = ''; curRow = [];
+                    }
+                } else curCell += c;
             }
-    
-            // PERBAIKAN: Menggunakan DIV GRID, bukan TR/TD
-            container.innerHTML = allData.map(item => {
-                const isRun = item.isRunning;
-                const badgeStyle = isRun 
-                    ? "bg-blue-50 text-blue-600 border-blue-100" 
-                    : "bg-amber-50 text-amber-600 border-amber-100";
-    
-                return `
-                    <div class="group bg-white hover:bg-slate-50 transition-all rounded-[1.5rem] shadow-sm p-6 grid grid-cols-12 gap-4 items-center border border-white card-hover">
-                        <div class="col-span-1">
-                            <span class="text-4xl font-black text-slate-100 italic group-hover:text-indigo-100 transition-colors">${item.seq}</span>
-                        </div>
-                        <div class="col-span-5 text-left">
-                            <div class="font-extrabold text-slate-800 text-lg leading-none mb-1 group-hover:text-indigo-600 transition-colors">${item.order}</div>
-                            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
-                                ${item.spec} | ${item.size} | ${item.weight} KG
+            if (curCell || curRow.length > 0) { curRow.push(curCell.trim()); rows.push(curRow); }
+            return rows;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            const dataToDisplay = activeTab === 'progress' ? appData : completedItems;
+            
+            const filteredData = dataToDisplay.filter(item => 
+                item.orderNo.toLowerCase().includes(searchQuery) || 
+                item.customer.toLowerCase().includes(searchQuery) ||
+                item.ccNo.toLowerCase().includes(searchQuery)
+            );
+
+            if (filteredData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-20 text-center">
+                            <div class="flex flex-col items-center text-slate-300">
+                                <i data-lucide="clock" class="w-12 h-12 mb-4 opacity-20"></i>
+                                <p class="text-sm font-bold uppercase tracking-widest opacity-50">Belum ada data ${activeTab}</p>
                             </div>
-                        </div>
-                        <div class="col-span-4 text-left border-l border-slate-50 pl-4">
-                            <div class="font-bold text-slate-700 text-[13px] mb-1">${item.customer}</div>
-                            <div class="text-[10px] text-indigo-500 font-black uppercase italic">DELIV: ${item.deliv}</div>
-                        </div>
-                        <div class="col-span-2 flex justify-center">
-                            <span class="${badgeStyle} border px-6 py-2 text-[10px] font-black rounded-full uppercase tracking-tighter w-28 text-center">
-                                ${isRun ? 'RUNNING' : 'WAITING'}
-                            </span>
-                        </div>
-                    </div>
+                        </td>
+                    </tr>
                 `;
-            }).join('');
+            } else {
+                tbody.innerHTML = filteredData.map(item => `
+                    <tr class="group hover:bg-slate-50/80 transition-colors">
+                        <td class="px-6 py-6 font-black italic text-2xl text-slate-200 group-hover:text-emerald-100 transition-colors">${item.seq}</td>
+                        <td class="px-6 py-6">
+                            <div class="text-sm font-black text-slate-800 tracking-tight">${item.orderNo}</div>
+                            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">${item.customer}</div>
+                        </td>
+                        <td class="px-6 py-6">
+                            <div class="px-4 py-2 bg-slate-100/50 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-600 min-w-[150px]">
+                                ${item.ccNo || "Ketik CC Coil..."}
+                            </div>
+                        </td>
+                        <td class="px-6 py-6">
+                            <div onclick="openModal('${item.id}')" class="w-full px-4 py-2 bg-slate-100/50 border border-slate-200 rounded-xl text-[11px] font-bold text-slate-400 cursor-pointer hover:bg-slate-100 flex items-center justify-between transition-colors">
+                                ${item.kendala || "Tulis kendala produksi..."}
+                                <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                            </div>
+                        </td>
+                        <td class="px-6 py-6 text-center">
+                            <span class="px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border shadow-sm ${item.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-500 border-amber-200'}">
+                                ${item.status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-6">
+                            ${activeTab === 'progress' ? `
+                                <div class="flex justify-center gap-2">
+                                    <button onclick="openModal('${item.id}')" class="p-2.5 bg-rose-50 text-rose-500 rounded-xl border border-rose-100 hover:bg-rose-500 hover:text-white transition-all shadow-sm">
+                                        <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                                    </button>
+                                    <button onclick="processScan('${item.orderNo}')" class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
+                                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            ` : `
+                                <div class="flex flex-col items-center">
+                                    <span class="text-[10px] font-bold text-slate-400">${item.finishedAt}</span>
+                                </div>
+                            `}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+            lucide.createIcons();
         }
-    
-        function updateMetrics() {
-            const total = document.getElementById('metric-total');
-            const run = document.getElementById('metric-run');
-            const wait = document.getElementById('metric-wait');
-            const done = document.getElementById('metric-done');
-    
-            if(total) total.innerText = allData.length;
-            if(run) run.innerText = allData.filter(d => d.isRunning).length;
-            if(wait) wait.innerText = allData.filter(d => !d.isRunning).length;
-            if(done) done.innerText = 0; 
+
+        function updateStats() {
+            document.getElementById('stat-total').innerText = appData.length + completedItems.length;
+            document.getElementById('stat-waiting').innerText = appData.filter(i => !i.kendala).length;
+            document.getElementById('stat-finished').innerText = completedItems.length;
+            document.getElementById('stat-issue').innerText = appData.filter(i => i.kendala).length;
         }
-    
+
+        function setTab(tab) {
+            activeTab = tab;
+            const progBtn = document.getElementById('tab-progress');
+            const finBtn = document.getElementById('tab-finished');
+            
+            if (tab === 'progress') {
+                progBtn.className = "flex-1 md:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 bg-white text-slate-900 shadow-sm border border-slate-200";
+                finBtn.className = "flex-1 md:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 text-slate-500 hover:text-slate-700";
+            } else {
+                finBtn.className = "flex-1 md:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 bg-white text-slate-900 shadow-sm border border-slate-200";
+                progBtn.className = "flex-1 md:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 text-slate-500 hover:text-slate-700";
+            }
+            renderTable();
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            renderTable();
+        }
+
+        function processManualInput() {
+            const val = document.getElementById('manualInput').value.trim();
+            if (val) {
+                processScan(val);
+                document.getElementById('manualInput').value = '';
+            }
+        }
+
+        function processScan(val) {
+            const index = appData.findIndex(item => 
+                item.orderNo.toLowerCase() === val.toLowerCase() || 
+                item.ccNo.toLowerCase() === val.toLowerCase()
+            );
+            
+            if (index !== -1) {
+                const item = appData[index];
+                const finishedItem = { ...item, status: 'COMPLETED', finishedAt: new Date().toLocaleTimeString() };
+                completedItems.unshift(finishedItem);
+                appData.splice(index, 1);
+                
+                showToast(`Item ${val} Selesai!`, 'success');
+                renderTable();
+                updateStats();
+            } else {
+                showToast(`Data "${val}" tidak ada di antrean!`, 'error');
+            }
+        }
+
+        function toggleScanner() {
+            const container = document.getElementById('scanner-container');
+            if (!showScanner) {
+                container.classList.remove('hidden');
+                showScanner = true;
+                html5QrCode = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }, false);
+                html5QrCode.render((result) => {
+                    processScan(result);
+                    toggleScanner();
+                }, (err) => {});
+            } else {
+                container.classList.add('hidden');
+                showScanner = false;
+                if (html5QrCode) {
+                    try { html5QrCode.clear(); } catch(e) {}
+                }
+            }
+        }
+
+        function openModal(id) {
+            selectedItemId = id;
+            const item = appData.find(i => i.id === id);
+            document.getElementById('modal-cc-info').innerText = item.ccNo || item.orderNo;
+            document.getElementById('kendala-select').value = item.kendala || "";
+            document.getElementById('modal-kendala').classList.remove('hidden');
+            document.getElementById('modal-kendala').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-kendala').classList.add('hidden');
+            document.getElementById('modal-kendala').classList.remove('flex');
+            selectedItemId = null;
+        }
+
+        function saveKendala() {
+            const val = document.getElementById('kendala-select').value;
+            if (selectedItemId && val) {
+                const item = appData.find(i => i.id === selectedItemId);
+                if (item) {
+                    item.kendala = val;
+                    renderTable();
+                    updateStats();
+                    showToast("Kendala Berhasil Disimpan", "success");
+                }
+            }
+            closeModal();
+        }
+
+        function showToast(msg, type) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            
+            document.getElementById('toast-message').innerText = msg;
+            
+            if (type === 'success') {
+                toast.className = "fixed bottom-8 left-1/2 -translate-x-1/2 px-8 py-4 rounded-2xl font-black text-[11px] shadow-2xl z-[110] flex items-center gap-3 uppercase tracking-widest animate-slide-up bg-[#00843d] text-white";
+                icon.setAttribute('data-lucide', 'check-circle');
+            } else {
+                toast.className = "fixed bottom-8 left-1/2 -translate-x-1/2 px-8 py-4 rounded-2xl font-black text-[11px] shadow-2xl z-[110] flex items-center gap-3 uppercase tracking-widest animate-slide-up bg-rose-600 text-white";
+                icon.setAttribute('data-lucide', 'alert-triangle');
+            }
+            
+            lucide.createIcons();
+            toast.classList.remove('hidden');
+            
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Jalankan saat pertama kali
         window.onload = fetchData;
-        setInterval(fetchData, 30000); 
     </script>
 </body>
 </html>
