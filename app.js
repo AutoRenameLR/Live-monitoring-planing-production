@@ -9,14 +9,14 @@
 
 const SHEET_CONFIG = {
     WAITING: {
-        DS1: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS5oxW4v4lVSiKmn8vUwaYIuzRDOoTCOhu0jB9zk6_WDM9ar1yAiPwrIZGUFvf3zXAqWcjnCaUyRKAu/pub?gid=0&single=true&output=csv",
-        DS2: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS5oxW4v4lVSiKmn8vUwaYIuzRDOoTCOhu0jB9zk6_WDM9ar1yAiPwrIZGUFvf3zXAqWcjnCaUyRKAu/pub?gid=1839583056&single=true&output=csv",
-        DS3: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS5oxW4v4lVSiKmn8vUwaYIuzRDOoTCOhu0jB9zk6_WDM9ar1yAiPwrIZGUFvf3zXAqWcjnCaUyRKAu/pub?gid=2002711566&single=true&output=csv"
+        DS1: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1zzsF-IcIz4gdMib0X6cMxfAlBKxo68Lu36xoBHS8_vzTLn9G0G6KDm_Z2OqtXWtLRXdwM4M0ikSa/pub?gid=0&single=true&output=csv",
+        DS2: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1zzsF-IcIz4gdMib0X6cMxfAlBKxo68Lu36xoBHS8_vzTLn9G0G6KDm_Z2OqtXWtLRXdwM4M0ikSa/pub?gid=1839583056&single=true&output=csv",
+        DS3: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1zzsF-IcIz4gdMib0X6cMxfAlBKxo68Lu36xoBHS8_vzTLn9G0G6KDm_Z2OqtXWtLRXdwM4M0ikSa/pub?gid=2002711566&single=true&output=csv"
     },
     FINISH: {
-        DS1: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS5oxW4v4lVSiKmn8vUwaYIuzRDOoTCOhu0jB9zk6_WDM9ar1yAiPwrIZGUFvf3zXAqWcjnCaUyRKAu/pub?gid=1963690094&single=true&output=csv",
-        DS2: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS5oxW4v4lVSiKmn8vUwaYIuzRDOoTCOhu0jB9zk6_WDM9ar1yAiPwrIZGUFvf3zXAqWcjnCaUyRKAu/pub?gid=43797719&single=true&output=csv",
-        DS3: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS5oxW4v4lVSiKmn8vUwaYIuzRDOoTCOhu0jB9zk6_WDM9ar1yAiPwrIZGUFvf3zXAqWcjnCaUyRKAu/pub?gid=923781372&single=true&output=csv"
+        DS1: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1zzsF-IcIz4gdMib0X6cMxfAlBKxo68Lu36xoBHS8_vzTLn9G0G6KDm_Z2OqtXWtLRXdwM4M0ikSa/pub?gid=1963690094&single=true&output=csv",
+        DS2: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1zzsF-IcIz4gdMib0X6cMxfAlBKxo68Lu36xoBHS8_vzTLn9G0G6KDm_Z2OqtXWtLRXdwM4M0ikSa/pub?gid=43797719&single=true&output=csv",
+        DS3: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1zzsF-IcIz4gdMib0X6cMxfAlBKxo68Lu36xoBHS8_vzTLn9G0G6KDm_Z2OqtXWtLRXdwM4M0ikSa/pub?gid=923781372&single=true&output=csv"
     }
 };
 const PLANING_EDIT_URLS = {
@@ -24,7 +24,7 @@ const PLANING_EDIT_URLS = {
     DS2: "https://docs.google.com/spreadsheets/d/1ilrNI9xBlDZTXOqjRChtov9BFG6ICA9T3IM3KVgqkg8/edit?gid=1839583056#gid=1839583056",
     DS3: "https://docs.google.com/spreadsheets/d/1ilrNI9xBlDZTXOqjRChtov9BFG6ICA9T3IM3KVgqkg8/edit?gid=2002711566#gid=2002711566"
 };
-const APPS_SCRIPT_URL  = "https://script.google.com/macros/s/AKfycbyYye3gG20qxLBaqVrEJBm0jsjQG2wCE9gUqsIlsBETr_cdVxovtHcyB7uu3x1RaKWn/exec";
+const APPS_SCRIPT_URL  = "https://script.google.com/macros/s/AKfycbySMIGOvE1JQ6QlNK8jv1vLCa5MGS-WCHQl-5YSHx6wbWMYxFuGXOlVE_AzEXrX1R3L-w/exec";
 const PLANING_COL      = { order:2, cc:6, spec:8, size:10, weight:12, place:5, cust:19 };
 const REFRESH_INTERVAL = 15000;
 
