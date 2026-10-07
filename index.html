@@ -13,7 +13,7 @@
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=4.3">
     <meta name="theme-color" content="#0f172a">
     <script>
         window.__pwaInstallEvent = null;
@@ -305,12 +305,12 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════
-     MODAL: FINISH / PAUSE PRODUKSI
-     ★ MEKANISME BARU:
-       - Start Process    → OTOMATIS (waktu START ditekan)
-       - Finish Process   → MANUAL   (ketik HH:mm:ss)
-       - Produk Keluar    → OTOMATIS (= waktu Finish)
-       - Coil Set Lifter  → MANUAL   (ketik HH:mm:ss, per-produk)
+     MODAL: FINISH / PAUSE PRODUKSI  (v4.3)
+     ★ MEKANISME WAKTU (format HH:MM, input lewat keypad angka):
+       - Start Process        → OTOMATIS (waktu START ditekan)
+       - Finish Process       → MANUAL   (keypad angka)
+       - Produk Keluar Mesin  → MANUAL   (keypad angka)
+       - Coil Set Set Lifter  → MANUAL   (keypad angka, per produk, opsional)
 ══════════════════════════════════════════════════════════════ -->
 <div id="modal-finish" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-overlay">
     <div class="bg-white w-full max-w-3xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 max-h-[95vh] flex flex-col">
@@ -340,15 +340,15 @@
             </div>
             <div class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span>
-                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Finish Process — Manual (HH:mm:ss)</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Produk Keluar dari Mesin — Otomatis (= Finish)</span>
+                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Finish Process — Manual (HH:MM)</span>
             </div>
             <div class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span>
-                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Coil Set Set Lifter — Manual (HH:mm:ss, per produk)</span>
+                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Produk Keluar dari Mesin — Manual (HH:MM)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span>
+                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Coil Set Set Lifter — Manual (HH:MM, per produk)</span>
             </div>
         </div>
 
@@ -374,26 +374,41 @@
                             class="w-full px-4 py-3 bg-indigo-50 border border-indigo-200 rounded-xl font-bold text-indigo-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
                     </div>
 
-                    <!-- ★ Finish Process — MANUAL (format HH:mm:ss) -->
+                    <!-- ★ Finish Process — MANUAL (keypad, format HH:MM) -->
                     <div>
                         <label class="text-[9px] font-black text-rose-600 uppercase mb-1.5 block flex items-center gap-1.5">
                             <span class="px-1.5 py-0.5 bg-rose-100 text-rose-600 rounded text-[8px] font-black">MANUAL</span>
-                            Finish Process (HH:mm:ss)
+                            Finish Process (HH:MM)
                         </label>
-                        <input type="text" id="finish-finish-time" placeholder="15:30:00"
-                            maxlength="8" pattern="\d{2}:\d{2}:\d{2}"
-                            oninput="formatTimeInput(this)"
-                            class="w-full px-4 py-3 bg-rose-50 border border-rose-200 rounded-xl font-black text-rose-700 font-mono outline-none focus:ring-2 focus:ring-rose-500 transition-all text-sm tracking-widest">
-                        <p class="text-[8px] text-rose-400 font-bold mt-1">Format: HH:mm:ss (contoh: 15:30:00)</p>
+                        <input type="text" id="finish-finish-time" placeholder="15:30"
+                            maxlength="5" readonly inputmode="none"
+                            data-label="Finish Process (HH:MM)"
+                            onclick="openTimePad(this)"
+                            class="w-full px-4 py-3 bg-rose-50 border border-rose-200 rounded-xl font-black text-rose-700 font-mono outline-none focus:ring-2 focus:ring-rose-500 transition-all text-sm tracking-widest cursor-pointer">
+                        <p class="text-[8px] text-rose-400 font-bold mt-1">Ketuk kolom, lalu isi lewat keypad (contoh: 15:30)</p>
                     </div>
                 </div>
 
-                <!-- Info otomatis Produk Keluar -->
-                <div class="mt-3 flex items-center gap-3 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-2.5">
-                    <i data-lucide="zap" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>
-                    <p class="text-[10px] text-emerald-700 font-bold">
-                        <strong>Produk Keluar dari Mesin</strong> akan diisi otomatis sama dengan waktu Finish Process yang Anda masukkan di atas.
-                    </p>
+                <!-- ★ Produk Keluar dari Mesin — MANUAL (keypad, format HH:MM) -->
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                    <div class="md:col-span-2 flex items-center gap-3 bg-rose-50 border border-rose-100 rounded-xl px-4 py-3 md:mt-[22px]">
+                        <i data-lucide="log-out" class="w-4 h-4 text-rose-500 flex-shrink-0"></i>
+                        <p class="text-[10px] text-rose-700 font-bold">
+                            <strong>Produk Keluar dari Mesin</strong> wajib diisi manual (HH:MM), sesuai waktu produk benar-benar keluar dari mesin.
+                        </p>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-rose-600 uppercase mb-1.5 block flex items-center gap-1.5">
+                            <span class="px-1.5 py-0.5 bg-rose-100 text-rose-600 rounded text-[8px] font-black">MANUAL</span>
+                            Produk Keluar Mesin (HH:MM)
+                        </label>
+                        <input type="text" id="finish-produk-keluar" placeholder="15:35"
+                            maxlength="5" readonly inputmode="none"
+                            data-label="Produk Keluar Mesin (HH:MM)"
+                            onclick="openTimePad(this)"
+                            class="w-full px-4 py-3 bg-rose-50 border border-rose-200 rounded-xl font-black text-rose-700 font-mono outline-none focus:ring-2 focus:ring-rose-500 transition-all text-sm tracking-widest cursor-pointer">
+                        <p class="text-[8px] text-rose-400 font-bold mt-1">Ketuk kolom, lalu isi lewat keypad (contoh: 15:35)</p>
+                    </div>
                 </div>
             </div>
 
@@ -404,7 +419,7 @@
                         <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Hasil Produk</p>
                         <p class="text-[9px] text-slate-400 mt-0.5 flex items-center gap-1">
                             <span class="px-1 py-0.5 bg-rose-100 text-rose-600 rounded text-[8px] font-black">MANUAL</span>
-                            Coil Set Set Lifter diisi waktu per-produk (HH:mm:ss)
+                            Coil Set Set Lifter diisi waktu per-produk (HH:MM, opsional)
                         </p>
                     </div>
                     <button onclick="addProductRow()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase px-4 py-2 rounded-xl transition-all">
@@ -563,6 +578,6 @@
     </div>
 </footer>
 
-<script src="app.js"></script>
+<script src="app.js?v=4.3"></script>
 </body>
 </html>
