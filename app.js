@@ -1,30 +1,53 @@
 // ================================================================
-//  HSSI DOWNSHEAR MONITORING — app.js (v4.1, 26 kolom)
-//  ★ MEKANISME WAKTU BARU:
+//  HSSI DOWNSHEAR MONITORING — app.js (v4.2, 26 kolom)
+//  ★ MEKANISME WAKTU:
 //    - Start Process        → OTOMATIS (waktu START ditekan)
 //    - Finish Process       → MANUAL   (user ketik HH:mm:ss)
 //    - Produk Keluar Mesin  → OTOMATIS (= nilai Finish Process)
 //    - Coil Set Set Lifter  → MANUAL   (user ketik HH:mm:ss, per produk)
 // ================================================================
 
+// ================================================================
+//  ★ KONFIGURASI — HANYA BAGIAN INI YANG PERLU KAMU ISI
+// ================================================================
+
+// 1) Kode publish dari "File > Share > Publish to web" di spreadsheet SALINAN
+//    (bagian setelah /d/e/ dan sebelum /pub)
+const PUBLISH_ID = "2PACX-1vQ1zzsF-IcIz4gdMib0X6cMxfAlBKxo68Lu36xoBHS8_vzTLn9G0G6KDm_Z2OqtXWtLRXdwM4M0ikSa";
+
+// 2) ID spreadsheet biasa (dari URL edit): docs.google.com/spreadsheets/d/<ID>/edit
+const SPREADSHEET_ID = "1bB4X6evVIDA0ozKQYCW55F8N5hCLWF_22lRLzX6uJ7c";
+
+// 3) ★ ISI gid SETIAP TAB dari spreadsheet SALINAN (angka setelah gid= di address bar)
+const GID = {
+    WAITING: { DS1: "0",       DS2: "1839583056", DS3: "2002711566" },
+    FINISH:  { DS1: "1963690094", DS2: "43797719", DS3: "923781372" }
+};
+
+// 4) URL Web App Apps Script (hasil Deploy > Web app dari spreadsheet SALINAN)
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzTXskS4dK-LVxsQkuqJCzT5xo5VAk-Zxol58NsrEfzhUXdt2-QIF-L7N0Bp4_yKdpovQ/exec";
+
+const csvUrl  = gid => `https://docs.google.com/spreadsheets/d/e/${PUBLISH_ID}/pub?gid=${gid}&single=true&output=csv`;
+const editUrl = gid => `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/edit?gid=${gid}#gid=${gid}`;
+
 const SHEET_CONFIG = {
     WAITING: {
-        DS1: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1zzsF-IcIz4gdMib0X6cMxfAlBKxo68Lu36xoBHS8_vzTLn9G0G6KDm_Z2OqtXWtLRXdwM4M0ikSa/pub?gid=0&single=true&output=csv",
-        DS2: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1zzsF-IcIz4gdMib0X6cMxfAlBKxo68Lu36xoBHS8_vzTLn9G0G6KDm_Z2OqtXWtLRXdwM4M0ikSa/pub?gid=1839583056&single=true&output=csv",
-        DS3: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1zzsF-IcIz4gdMib0X6cMxfAlBKxo68Lu36xoBHS8_vzTLn9G0G6KDm_Z2OqtXWtLRXdwM4M0ikSa/pub?gid=2002711566&single=true&output=csv"
+        DS1: csvUrl(GID.WAITING.DS1),
+        DS2: csvUrl(GID.WAITING.DS2),
+        DS3: csvUrl(GID.WAITING.DS3)
     },
     FINISH: {
-        DS1: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1zzsF-IcIz4gdMib0X6cMxfAlBKxo68Lu36xoBHS8_vzTLn9G0G6KDm_Z2OqtXWtLRXdwM4M0ikSa/pub?gid=1963690094&single=true&output=csv",
-        DS2: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1zzsF-IcIz4gdMib0X6cMxfAlBKxo68Lu36xoBHS8_vzTLn9G0G6KDm_Z2OqtXWtLRXdwM4M0ikSa/pub?gid=43797719&single=true&output=csv",
-        DS3: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1zzsF-IcIz4gdMib0X6cMxfAlBKxo68Lu36xoBHS8_vzTLn9G0G6KDm_Z2OqtXWtLRXdwM4M0ikSa/pub?gid=923781372&single=true&output=csv"
+        DS1: csvUrl(GID.FINISH.DS1),
+        DS2: csvUrl(GID.FINISH.DS2),
+        DS3: csvUrl(GID.FINISH.DS3)
     }
 };
 const PLANING_EDIT_URLS = {
-    DS1: "https://docs.google.com/spreadsheets/d/1bB4X6evVIDA0ozKQYCW55F8N5hCLWF_22lRLzX6uJ7c/edit?gid=0#gid=0",
-    DS2: "https://docs.google.com/spreadsheets/d/1bB4X6evVIDA0ozKQYCW55F8N5hCLWF_22lRLzX6uJ7c/edit?gid=1839583056#gid=1839583056",
-    DS3: "https://docs.google.com/spreadsheets/d/1bB4X6evVIDA0ozKQYCW55F8N5hCLWF_22lRLzX6uJ7c/edit?gid=2002711566#gid=2002711566"
+    DS1: editUrl(GID.WAITING.DS1),
+    DS2: editUrl(GID.WAITING.DS2),
+    DS3: editUrl(GID.WAITING.DS3)
 };
-const APPS_SCRIPT_URL  = "https://script.google.com/macros/s/AKfycbzTXskS4dK-LVxsQkuqJCzT5xo5VAk-Zxol58NsrEfzhUXdt2-QIF-L7N0Bp4_yKdpovQ/exec";
+
 const PLANING_COL      = { order:2, cc:6, spec:8, size:10, weight:12, place:5, cust:19 };
 const REFRESH_INTERVAL = 15000;
 
@@ -68,12 +91,10 @@ function sanitizeTimeDisplay(val) {
 }
 
 /**
- * ★ formatTimeInput — auto-format ketikan user menjadi HH:mm:ss
- * Dipanggil dari oninput di input time manual.
+ * formatTimeInput — auto-format ketikan user menjadi HH:mm:ss
  * Contoh: user ketik "153045" → tampil "15:30:45"
  */
 function formatTimeInput(el) {
-    // Hanya ambil digit
     let digits = el.value.replace(/\D/g, '').slice(0, 6);
     let formatted = '';
     if (digits.length > 0) formatted = digits.slice(0,2);
@@ -81,7 +102,6 @@ function formatTimeInput(el) {
     if (digits.length > 4) formatted += ':' + digits.slice(4,6);
     el.value = formatted;
 
-    // Warnai merah jika format belum lengkap
     if (formatted.length === 8) {
         el.classList.remove('border-rose-400');
         el.classList.add('border-emerald-400');
@@ -91,9 +111,6 @@ function formatTimeInput(el) {
     }
 }
 
-/**
- * Validasi format HH:mm:ss — kembalikan true jika valid
- */
 function isValidTimeFormat(val) {
     return /^\d{2}:\d{2}:\d{2}$/.test((val||'').trim());
 }
@@ -173,7 +190,7 @@ function sendResumeToServer(item) {
            "ORDER NO":item.orderNo||"-","START TIME":item.startTime });
 }
 
-// ★ PAUSE — finishTime = manual input (PAUSE TIME), produkKeluar = auto = finishTime
+// PAUSE — pauseTime = manual input, produkKeluar = auto = pauseTime
 function sendPauseToServer(item, pauseTime, products, dtValues, speed, remark, extras) {
     products.forEach(prod => {
         post({
@@ -186,11 +203,9 @@ function sendPauseToServer(item, pauseTime, products, dtValues, speed, remark, e
             "QTY FG":prod.fg,"QTY NG":prod.ng,
             "TOTAL SKID":prod.totalSkid||0,
             "TOTAL_LENGTH":prod.totalLength||0,
-            // ★ Coil Set Lifter = waktu manual (HH:mm:ss)
             "COIL_SET_LIFTER":prod.coilSetLifter||"",
             "START":item.startTime||"-",
             "PAUSE TIME":pauseTime,
-            // ★ Produk Keluar = otomatis = pauseTime
             "PRODUK_KELUAR":pauseTime,
             "DT_TBM":dtValues.tbm,"DT_PACKING":dtValues.packing,
             "DT_WAITING_MC":dtValues.wmc,"DT_WAITING_CRANE":dtValues.wcr,
@@ -205,7 +220,7 @@ function sendPauseToServer(item, pauseTime, products, dtValues, speed, remark, e
 async function fetchRemoteStatus() {
     try {
         const res  = await fetch(APPS_SCRIPT_URL+"?action=GET_STATUS&t="+Date.now());
-        if (!res.ok) return;
+        if (!res.ok) { console.warn("GET_STATUS HTTP", res.status); return; }
         const json = await res.json();
         if (json && json.status==="ok" && Array.isArray(json.data)) {
             remoteStatusMap = {};
@@ -233,10 +248,18 @@ async function fetchAllData() {
     try {
         const [rW, rF] = await Promise.all([
             Promise.all(Object.keys(SHEET_CONFIG.WAITING).map(async ln => {
-                try { const r=await fetch(SHEET_CONFIG.WAITING[ln]+"&t="+Date.now()); return parseWaitingCSV(ln, await r.text()); } catch { return []; }
+                try {
+                    const r = await fetch(SHEET_CONFIG.WAITING[ln]+"&t="+Date.now());
+                    if (!r.ok) { console.warn(`WAITING ${ln}: HTTP ${r.status}`); return []; }
+                    return parseWaitingCSV(ln, await r.text());
+                } catch(e) { console.warn(`WAITING ${ln} gagal:`, e.message); return []; }
             })),
             Promise.all(Object.keys(SHEET_CONFIG.FINISH).map(async ln => {
-                try { const r=await fetch(SHEET_CONFIG.FINISH[ln]+"&t="+Date.now()); if(!r.ok)return[]; return parseFinishCSV(ln, await r.text()); } catch { return []; }
+                try {
+                    const r = await fetch(SHEET_CONFIG.FINISH[ln]+"&t="+Date.now());
+                    if (!r.ok) { console.warn(`FINISH ${ln}: HTTP ${r.status}`); return []; }
+                    return parseFinishCSV(ln, await r.text());
+                } catch(e) { console.warn(`FINISH ${ln} gagal:`, e.message); return []; }
             }))
         ]);
 
@@ -423,11 +446,9 @@ function parseFinishCSV(line, text) {
             qtyFG:g(col.qtyFG)||'0', qtyNG:g(col.qtyNG)||'0',
             totalSkid:g(col.totalSkid)||'0',
             totalLength:g(col.totalLength)||'0',
-            // ★ coilSetLifter sekarang string waktu HH:mm:ss (bukan angka)
             coilSetLifter:sanitizeTimeDisplay(g(col.coilSetLifter))||'—',
             startTime:sanitizeTimeDisplay(g(col.start)),
             finishedAt:sanitizeTimeDisplay(g(col.finish)),
-            // ★ produkKeluar = otomatis = sama dengan finishedAt
             produkKeluar:sanitizeTimeDisplay(g(col.produkKeluar))||sanitizeTimeDisplay(g(col.finish)),
             dtTBM,dtPacking:dtPkg,dtWaitingMC:dtWMC,dtWaitingCrane:dtWCR,
             dtWinder:dtWND,dtCleaning:dtCLN,dtProblem:dtPBM,dtOther:dtOTH,
@@ -548,7 +569,7 @@ function renderTable() {
                 :'bg-slate-100 text-slate-400';
             const statusText=isOnProcess?'ON PROCESS':isPaused?'⏸ PAUSED':item.status;
             const shiftBadge=(isOnProcess||isPaused)&&shiftNum>1
-                ?`<span class="ml-1 px-1.5 py-0.5 bg-indigo-100 text-indigo-600 border border-indigo-200 rounded text-[7px] font-black">SHIFT ${shiftNum}</span>`:''
+                ?`<span class="ml-1 px-1.5 py-0.5 bg-indigo-100 text-indigo-600 border border-indigo-200 rounded text-[7px] font-black">SHIFT ${shiftNum}</span>`:'';
             let actionBtns='';
             if(isOnProcess){
                 actionBtns=`
@@ -654,8 +675,8 @@ function updateDTTotal() {
 }
 
 /**
- * ★ addProductRow — 26-col
- *   coilSetLifter = waktu manual (string HH:mm:ss), bukan angka
+ * addProductRow — 26-col
+ * coilSetLifter = waktu manual (string HH:mm:ss), bukan angka
  */
 function addProductRow(qtyFG='',qtyNG='0',width='',totalSkid='0',cut='0',totalLength='0',coilSetLifter='') {
     productRowCounter++;
@@ -698,7 +719,7 @@ function addProductRow(qtyFG='',qtyNG='0',width='',totalSkid='0',cut='0',totalLe
                     class="w-full px-3 py-2.5 bg-amber-50 border border-amber-100 rounded-xl font-black text-amber-700 outline-none focus:ring-2 focus:ring-amber-500 transition-all text-sm">
             </div>
         </div>
-        <!-- Baris 2: Total Length + ★ Coil Set Set Lifter (MANUAL, format waktu) -->
+        <!-- Baris 2: Total Length + Coil Set Set Lifter (MANUAL, format waktu) -->
         <div class="grid grid-cols-2 gap-3">
             <div>
                 <label class="text-[9px] font-black text-sky-600 uppercase mb-1.5 block">Total Length (M)</label>
@@ -787,19 +808,19 @@ function submitFinish() {
     if(!finishingItemId)return;
     const item=appData.find(i=>i.id===finishingItemId); if(!item)return;
 
-    // ── ★ Ambil Finish Time dari input MANUAL ──
+    // Finish Time dari input MANUAL
     const finishTimeRaw=(document.getElementById('finish-finish-time')?.value||'').trim();
     if(!isValidTimeFormat(finishTimeRaw)){
         showToast("Isi Finish Process dengan format HH:mm:ss (contoh: 15:30:00)!","error");
         document.getElementById('finish-finish-time')?.focus();
         return;
     }
-    const finishTime = finishTimeRaw; // sudah valid HH:mm:ss
+    const finishTime = finishTimeRaw;
 
-    // ★ Produk Keluar = OTOMATIS = sama dengan Finish Time
+    // Produk Keluar = OTOMATIS = sama dengan Finish Time
     const produkKeluar = finishTime;
 
-    // ── Produk rows ──
+    // Produk rows
     const container=document.getElementById('product-rows-container');
     const products=[];
     for(const row of container.querySelectorAll('[id^="product-row-"]')){
@@ -807,7 +828,6 @@ function submitFinish() {
         const fg=parseFloat(document.getElementById(`fg-${rId}`)?.value||'0')||0;
         if(fg<=0){showToast(`Qty FG produk #${rId} wajib diisi!`,"error");return;}
 
-        // ★ Coil Set Set Lifter = waktu MANUAL (HH:mm:ss)
         const coilVal=(document.getElementById(`coilSetLifter-${rId}`)?.value||'').trim();
         if(coilVal && !isValidTimeFormat(coilVal)){
             showToast(`Coil Set Set Lifter #${rId}: format harus HH:mm:ss!`,"error");
@@ -822,7 +842,7 @@ function submitFinish() {
             totalSkid:parseFloat(document.getElementById(`skid-${rId}`)?.value||'0')||0,
             cut:parseFloat(document.getElementById(`cut-${rId}`)?.value||'0')||0,
             totalLength:parseFloat(document.getElementById(`totalLength-${rId}`)?.value||'0')||0,
-            coilSetLifter:coilVal   // ★ string HH:mm:ss atau kosong
+            coilSetLifter:coilVal
         });
     }
     if(!products.length){showToast("Minimal 1 produk wajib diisi!","error");return;}
@@ -833,7 +853,7 @@ function submitFinish() {
     const dateStr  =new Date().toLocaleDateString('id-ID');
     const shiftNum =item.shift||1;
 
-    // ── DT values ──
+    // DT values
     const gDT=id=>parseFloat(document.getElementById(id)?.value||'0')||0;
     const dtValues={
         tbm:gDT('dt-tbm'),packing:gDT('dt-packing'),wmc:gDT('dt-waiting-mc'),
@@ -865,13 +885,9 @@ function submitFinish() {
             "QTY FG":prod.fg,"QTY NG":prod.ng,
             "TOTAL SKID":prod.totalSkid||0,
             "TOTAL_LENGTH":prod.totalLength||0,
-            // ★ Coil Set Set Lifter = string waktu manual
             "COIL_SET_LIFTER":prod.coilSetLifter||"",
-            // ★ Start = otomatis (dari state)
             "START":item.startTime||"-",
-            // ★ Finish = manual input
             "FINISH":finishTime,
-            // ★ Produk Keluar = otomatis = Finish
             "PRODUK_KELUAR":produkKeluar,
             "DT_TBM":dtValues.tbm,"DT_PACKING":dtValues.packing,
             "DT_WAITING_MC":dtValues.wmc,"DT_WAITING_CRANE":dtValues.wcr,
@@ -886,15 +902,14 @@ function submitFinish() {
     delete remoteStatusMap[item.ccNo+"|"+item.line];
 
     item.status       ="COMPLETED";
-    item.finishedAt   =finishTime;       // ★ manual input
-    item.produkKeluar =produkKeluar;     // ★ otomatis = finishTime
+    item.finishedAt   =finishTime;
+    item.produkKeluar =produkKeluar;
     item.actualWidthMC=actualWidthMC;
     item.productWidth =products.map(p=>p.width).filter(Boolean).join(', ');
     item.qtyFG        =products.reduce((s,p)=>s+p.fg,0);
     item.qtyNG        =products.reduce((s,p)=>s+p.ng,0);
     item.totalSkid    =products.reduce((s,p)=>s+p.totalSkid,0);
     item.totalLength  =products.reduce((s,p)=>s+p.totalLength,0);
-    // coilSetLifter: simpan nilai dari produk pertama (atau join jika lebih dari 1)
     item.coilSetLifter=products.map(p=>p.coilSetLifter).filter(Boolean).join(', ')||'—';
     item.dtTBM=dtValues.tbm;item.dtPacking=dtValues.packing;
     item.dtWaitingMC=dtValues.wmc;item.dtWaitingCrane=dtValues.wcr;
@@ -1229,4 +1244,40 @@ function closeIosGuide(){hideModal('modal-ios-guide');}
 window.addEventListener('appinstalled',()=>{hideInstallBtn();window.__pwaInstallEvent=null;showToast('✅ Aplikasi berhasil diinstall!','success');});
 if('serviceWorker'in navigator){
     navigator.serviceWorker.register('./sw.js').then(r=>console.log('[SW] registered:',r.scope)).catch(e=>console.warn('[SW] failed:',e));
+}
+
+// ================================================================
+//  ★ ALAT DIAGNOSA — buka aplikasi, tekan F12 > Console, ketik:
+//    testKoneksi()
+// ================================================================
+async function testKoneksi() {
+    console.log("=== TES KONEKSI ===");
+    for (const jenis of ["WAITING", "FINISH"]) {
+        for (const ln of ["DS1", "DS2", "DS3"]) {
+            const url = SHEET_CONFIG[jenis][ln];
+            try {
+                const r = await fetch(url + "&t=" + Date.now());
+                const t = await r.text();
+                const isHtml = t.trim().toLowerCase().startsWith("<!doctype") || t.includes("<html");
+                console.log(
+                    `${jenis} ${ln}: HTTP ${r.status}`,
+                    isHtml ? "-> SALAH (balasan HTML: gid salah / belum dipublish)"
+                           : `-> OK (${t.split(/\r?\n/).length} baris)`
+                );
+            } catch (e) {
+                console.log(`${jenis} ${ln}: GAGAL (${e.message}) -> link/publish salah`);
+            }
+        }
+    }
+    try {
+        const r = await fetch(APPS_SCRIPT_URL + "?action=GET_STATUS&t=" + Date.now());
+        const t = await r.text();
+        console.log("Apps Script: HTTP", r.status);
+        console.log(t.trim().startsWith("{")
+            ? "-> OK, balasan JSON: " + t.slice(0, 200)
+            : "-> SALAH (bukan JSON, kemungkinan halaman login / akses belum 'Anyone'): " + t.slice(0, 120));
+    } catch (e) {
+        console.log("Apps Script GAGAL:", e.message, "-> cek deployment (Anyone) & URL /exec");
+    }
+    console.log("=== SELESAI ===");
 }
