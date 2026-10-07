@@ -16,7 +16,7 @@
 const PUBLISH_ID = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1zzsF-IcIz4gdMib0X6cMxfAlBKxo68Lu36xoBHS8_vzTLn9G0G6KDm_Z2OqtXWtLRXdwM4M0ikSa/pub?output=csv";
 
 // 2) ID spreadsheet biasa (dari URL edit): docs.google.com/spreadsheets/d/<ID>/edit
-const SPREADSHEET_ID = "AKfycbzTXskS4dK-LVxsQkuqJCzT5xo5VAk-Zxol58NsrEfzhUXdt2-QIF-L7N0Bp4_yKdpovQ";
+const SPREADSHEET_ID = "1bB4X6evVIDA0ozKQYCW55F8N5hCLWF_22lRLzX6uJ7c";
 
 // 3) ★ ISI gid SETIAP TAB dari spreadsheet SALINAN (angka setelah gid= di address bar)
 const GID = {
