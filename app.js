@@ -20,9 +20,9 @@ const SHEET_CONFIG = {
     }
 };
 const PLANING_EDIT_URLS = {
-    DS1: "https://docs.google.com/spreadsheets/d/1ilrNI9xBlDZTXOqjRChtov9BFG6ICA9T3IM3KVgqkg8/edit?gid=0#gid=0",
-    DS2: "https://docs.google.com/spreadsheets/d/1ilrNI9xBlDZTXOqjRChtov9BFG6ICA9T3IM3KVgqkg8/edit?gid=1839583056#gid=1839583056",
-    DS3: "https://docs.google.com/spreadsheets/d/1ilrNI9xBlDZTXOqjRChtov9BFG6ICA9T3IM3KVgqkg8/edit?gid=2002711566#gid=2002711566"
+    DS1: "https://docs.google.com/spreadsheets/d/1bB4X6evVIDA0ozKQYCW55F8N5hCLWF_22lRLzX6uJ7c/edit?gid=0#gid=0",
+    DS2: "https://docs.google.com/spreadsheets/d/1bB4X6evVIDA0ozKQYCW55F8N5hCLWF_22lRLzX6uJ7c/edit?gid=1839583056#gid=1839583056",
+    DS3: "https://docs.google.com/spreadsheets/d/1bB4X6evVIDA0ozKQYCW55F8N5hCLWF_22lRLzX6uJ7c/edit?gid=2002711566#gid=2002711566"
 };
 const APPS_SCRIPT_URL  = "https://script.google.com/macros/s/AKfycbzTXskS4dK-LVxsQkuqJCzT5xo5VAk-Zxol58NsrEfzhUXdt2-QIF-L7N0Bp4_yKdpovQ/exec";
 const PLANING_COL      = { order:2, cc:6, spec:8, size:10, weight:12, place:5, cust:19 };
