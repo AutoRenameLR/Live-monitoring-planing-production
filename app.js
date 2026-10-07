@@ -1,10 +1,10 @@
 // ================================================================
-//  HSSI DOWNSHEAR MONITORING — app.js (v4.2, 26 kolom)
-//  ★ MEKANISME WAKTU:
+//  HSSI DOWNSHEAR MONITORING — app.js (v4.3, 26 kolom)
+//  ★ MEKANISME WAKTU (format HH:MM):
 //    - Start Process        → OTOMATIS (waktu START ditekan)
-//    - Finish Process       → MANUAL   (user ketik HH:mm:ss)
-//    - Produk Keluar Mesin  → OTOMATIS (= nilai Finish Process)
-//    - Coil Set Set Lifter  → MANUAL   (user ketik HH:mm:ss, per produk)
+//    - Finish Process       → MANUAL   (keypad angka)
+//    - Produk Keluar Mesin  → MANUAL   (keypad angka)
+//    - Coil Set Set Lifter  → MANUAL   (keypad angka, per produk, opsional)
 // ================================================================
 
 // ================================================================
@@ -12,7 +12,7 @@
 // ================================================================
 
 // 1) Kode publish dari "File > Share > Publish to web" di spreadsheet SALINAN
-//    (bagian setelah /d/e/ dan sebelum /pub)
+//    HANYA KODE-nya saja (bagian setelah /d/e/ dan sebelum /pub), BUKAN URL lengkap
 const PUBLISH_ID = "2PACX-1vQ1zzsF-IcIz4gdMib0X6cMxfAlBKxo68Lu36xoBHS8_vzTLn9G0G6KDm_Z2OqtXWtLRXdwM4M0ikSa";
 
 // 2) ID spreadsheet biasa (dari URL edit): docs.google.com/spreadsheets/d/<ID>/edit
@@ -73,46 +73,156 @@ let countdownValue   = REFRESH_INTERVAL / 1000;
 let toastTimer       = null;
 
 // ================================================================
-//  TIME HELPERS
+//  TIME HELPERS (format HH:MM)
 // ================================================================
 function getTimeString(date) {
     const d = date || new Date();
     const p = n => String(n).padStart(2,'0');
-    return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+    return `${p(d.getHours())}:${p(d.getMinutes())}`;
 }
+
+// Data lama berformat HH:mm:ss otomatis dipotong menjadi HH:MM
 function sanitizeTimeDisplay(val) {
     if (!val || String(val).trim()==='' || String(val).trim()==='-') return '—';
     const s = String(val).trim();
-    if (/^\d{2}:\d{2}:\d{2}$/.test(s)) return s;
-    if (/^\d{2}\.\d{2}\.\d{2}$/.test(s)) return s.replace(/\./g,':');
-    const m = s.match(/(\d{2}:\d{2}:\d{2})/); if (m) return m[1];
-    const md= s.match(/(\d{2})\.(\d{2})\.(\d{2})/); if (md) return `${md[1]}:${md[2]}:${md[3]}`;
-    return s.length>=8 ? s.slice(0,8) : s;
+    const m = s.match(/(\d{1,2})[:.](\d{2})(?:[:.]\d{2})?/);
+    if (m) return String(m[1]).padStart(2,'0') + ':' + m[2];
+    return s.slice(0,5);
+}
+
+function formatTimeInput(el) {
+    let digits = el.value.replace(/\D/g, '').slice(0, 4);
+    let formatted = digits.slice(0,2);
+    if (digits.length > 2) formatted += ':' + digits.slice(2,4);
+    el.value = formatted;
+    el.classList.toggle('border-emerald-400', formatted.length === 5);
+    el.classList.toggle('border-rose-400', formatted.length !== 5);
+}
+
+// Valid: 00:00 sampai 23:59
+function isValidTimeFormat(val) {
+    return /^([01]\d|2[0-3]):[0-5]\d$/.test((val||'').trim());
+}
+
+// ================================================================
+//  KEYPAD WAKTU (HH:MM)
+// ================================================================
+let timePadTarget = null, timePadDigits = '';
+
+function ensureTimePad() {
+    if (document.getElementById('time-pad')) return;
+    const d = document.createElement('div');
+    d.id = 'time-pad';
+    d.style.cssText = 'position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,.6);padding:16px';
+    const key = (label, fn, cls='bg-slate-100 text-slate-800 hover:bg-slate-200') =>
+        `<button type="button" onclick="${fn}" class="py-4 rounded-2xl text-xl font-black active:scale-95 transition-all ${cls}">${label}</button>`;
+    d.innerHTML = `
+        <div class="bg-white rounded-3xl p-5 w-full max-w-[320px] shadow-2xl">
+            <div id="time-pad-label" class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center mb-2">Input Waktu</div>
+            <div id="time-pad-display" class="text-center text-4xl font-mono font-black text-slate-800 tracking-widest py-3 bg-slate-50 rounded-2xl mb-1">__:__</div>
+            <div id="time-pad-err" class="text-center text-[10px] font-bold text-rose-500 h-4 mb-2"></div>
+            <div class="grid grid-cols-3 gap-2">
+                ${[1,2,3,4,5,6,7,8,9].map(n => key(n, `timePadPress('${n}')`)).join('')}
+                ${key('C', 'timePadClear()', 'bg-rose-100 text-rose-600 hover:bg-rose-200')}
+                ${key('0', "timePadPress('0')")}
+                ${key('⌫', 'timePadBack()', 'bg-amber-100 text-amber-700 hover:bg-amber-200')}
+            </div>
+            <div class="grid grid-cols-2 gap-2 mt-2">
+                ${key('SEKARANG', 'timePadNow()', 'bg-sky-100 text-sky-700 hover:bg-sky-200 !text-xs tracking-widest')}
+                ${key('OK', 'timePadOk()', 'bg-emerald-500 text-white hover:bg-emerald-600')}
+            </div>
+            <button type="button" onclick="closeTimePad()" class="w-full mt-2 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Batal</button>
+        </div>`;
+    d.addEventListener('click', e => { if (e.target === d) closeTimePad(); });
+    document.body.appendChild(d);
+}
+
+function renderTimePad() {
+    const p = timePadDigits.padEnd(4, '_');
+    document.getElementById('time-pad-display').textContent = p.slice(0,2) + ':' + p.slice(2);
+}
+
+function openTimePad(el) {
+    if (!el) return;
+    ensureTimePad();
+    timePadTarget = el;
+    timePadDigits = (el.value || '').replace(/\D/g, '').slice(0, 4);
+    document.getElementById('time-pad-err').textContent = '';
+    const lbl = el.getAttribute('data-label');
+    document.getElementById('time-pad-label').textContent = lbl || 'Input Waktu (HH:MM)';
+    renderTimePad();
+    document.getElementById('time-pad').style.display = 'flex';
+}
+function closeTimePad() {
+    const p = document.getElementById('time-pad');
+    if (p) p.style.display = 'none';
+    timePadTarget = null;
+}
+function timePadPress(n) {
+    if (timePadDigits.length >= 4) return;
+    timePadDigits += n;
+    document.getElementById('time-pad-err').textContent = '';
+    renderTimePad();
+}
+function timePadBack()  { timePadDigits = timePadDigits.slice(0, -1); renderTimePad(); }
+function timePadClear() { timePadDigits = ''; renderTimePad(); }
+function timePadNow() {
+    const n = new Date(), p = x => String(x).padStart(2,'0');
+    timePadDigits = p(n.getHours()) + p(n.getMinutes());
+    document.getElementById('time-pad-err').textContent = '';
+    renderTimePad();
+}
+function timePadOk() {
+    if (!timePadTarget) return closeTimePad();
+    const err = document.getElementById('time-pad-err');
+    if (timePadDigits.length === 0) {          // kosongkan (untuk field opsional)
+        timePadTarget.value = '';
+        timePadTarget.classList.remove('border-emerald-400','border-rose-400');
+        return closeTimePad();
+    }
+    if (timePadDigits.length !== 4) { err.textContent = 'Lengkapi 4 digit (HH:MM)'; return; }
+    const val = timePadDigits.slice(0,2) + ':' + timePadDigits.slice(2);
+    if (!isValidTimeFormat(val)) { err.textContent = 'Jam 00–23, menit 00–59'; return; }
+    timePadTarget.value = val;
+    timePadTarget.classList.remove('border-rose-400');
+    timePadTarget.classList.add('border-emerald-400');
+    closeTimePad();
+}
+
+// Ubah input teks biasa menjadi input yang membuka keypad
+function attachTimePad(el, label) {
+    if (!el) return;
+    el.readOnly = true;
+    el.setAttribute('inputmode', 'none');
+    el.maxLength = 5;
+    el.placeholder = '15:30';
+    el.removeAttribute('oninput');
+    el.oninput = null;
+    el.style.cursor = 'pointer';
+    if (label) el.setAttribute('data-label', label);
+    el.onclick = () => openTimePad(el);
 }
 
 /**
- * formatTimeInput — auto-format ketikan user menjadi HH:mm:ss
- * Contoh: user ketik "153045" → tampil "15:30:45"
+ * Membuat input "Produk Keluar Mesin" secara dinamis di bawah input Finish Process
+ * (supaya index.html tidak perlu diubah)
  */
-function formatTimeInput(el) {
-    let digits = el.value.replace(/\D/g, '').slice(0, 6);
-    let formatted = '';
-    if (digits.length > 0) formatted = digits.slice(0,2);
-    if (digits.length > 2) formatted += ':' + digits.slice(2,4);
-    if (digits.length > 4) formatted += ':' + digits.slice(4,6);
-    el.value = formatted;
-
-    if (formatted.length === 8) {
-        el.classList.remove('border-rose-400');
-        el.classList.add('border-emerald-400');
-    } else {
-        el.classList.remove('border-emerald-400');
-        el.classList.add('border-rose-400');
-    }
-}
-
-function isValidTimeFormat(val) {
-    return /^\d{2}:\d{2}:\d{2}$/.test((val||'').trim());
+function ensureProdukKeluarField() {
+    if (document.getElementById('finish-produk-keluar')) return;
+    const ft = document.getElementById('finish-finish-time');
+    if (!ft) return;
+    const host = ft.parentElement;
+    const wrap = document.createElement('div');
+    wrap.className = 'mt-3';
+    wrap.innerHTML = `
+        <label class="text-[9px] font-black text-rose-600 uppercase mb-1.5 flex items-center gap-1.5">
+            <span class="px-1.5 py-0.5 bg-rose-100 text-rose-600 rounded text-[8px] font-black">MANUAL</span>
+            Produk Keluar Mesin (HH:MM)
+        </label>
+        <input type="text" id="finish-produk-keluar"
+            class="w-full px-3 py-2.5 bg-rose-50 border border-rose-200 rounded-xl font-mono font-black text-rose-700 outline-none focus:ring-2 focus:ring-rose-500 transition-all text-sm tracking-widest">`;
+    host.insertAdjacentElement('afterend', wrap);
+    attachTimePad(document.getElementById('finish-produk-keluar'), 'Produk Keluar Mesin (HH:MM)');
 }
 
 // ================================================================
@@ -190,7 +300,7 @@ function sendResumeToServer(item) {
            "ORDER NO":item.orderNo||"-","START TIME":item.startTime });
 }
 
-// PAUSE — pauseTime = manual input, produkKeluar = auto = pauseTime
+// PAUSE — pauseTime = manual input, produkKeluar = manual input
 function sendPauseToServer(item, pauseTime, products, dtValues, speed, remark, extras) {
     products.forEach(prod => {
         post({
@@ -206,7 +316,7 @@ function sendPauseToServer(item, pauseTime, products, dtValues, speed, remark, e
             "COIL_SET_LIFTER":prod.coilSetLifter||"",
             "START":item.startTime||"-",
             "PAUSE TIME":pauseTime,
-            "PRODUK_KELUAR":pauseTime,
+            "PRODUK_KELUAR":extras.produkKeluar||"",
             "DT_TBM":dtValues.tbm,"DT_PACKING":dtValues.packing,
             "DT_WAITING_MC":dtValues.wmc,"DT_WAITING_CRANE":dtValues.wcr,
             "DT_WINDER":dtValues.wnd,"DT_CLEANING":dtValues.cln,
@@ -449,7 +559,7 @@ function parseFinishCSV(line, text) {
             coilSetLifter:sanitizeTimeDisplay(g(col.coilSetLifter))||'—',
             startTime:sanitizeTimeDisplay(g(col.start)),
             finishedAt:sanitizeTimeDisplay(g(col.finish)),
-            produkKeluar:sanitizeTimeDisplay(g(col.produkKeluar))||sanitizeTimeDisplay(g(col.finish)),
+            produkKeluar:sanitizeTimeDisplay(g(col.produkKeluar)),
             dtTBM,dtPacking:dtPkg,dtWaitingMC:dtWMC,dtWaitingCrane:dtWCR,
             dtWinder:dtWND,dtCleaning:dtCLN,dtProblem:dtPBM,dtOther:dtOTH,
             kendalaWaktu:totalDT.toString(),
@@ -676,7 +786,7 @@ function updateDTTotal() {
 
 /**
  * addProductRow — 26-col
- * coilSetLifter = waktu manual (string HH:mm:ss), bukan angka
+ * coilSetLifter = waktu manual (string HH:MM) via keypad, opsional
  */
 function addProductRow(qtyFG='',qtyNG='0',width='',totalSkid='0',cut='0',totalLength='0',coilSetLifter='') {
     productRowCounter++;
@@ -719,7 +829,7 @@ function addProductRow(qtyFG='',qtyNG='0',width='',totalSkid='0',cut='0',totalLe
                     class="w-full px-3 py-2.5 bg-amber-50 border border-amber-100 rounded-xl font-black text-amber-700 outline-none focus:ring-2 focus:ring-amber-500 transition-all text-sm">
             </div>
         </div>
-        <!-- Baris 2: Total Length + Coil Set Set Lifter (MANUAL, format waktu) -->
+        <!-- Baris 2: Total Length + Coil Set Set Lifter (MANUAL, keypad waktu) -->
         <div class="grid grid-cols-2 gap-3">
             <div>
                 <label class="text-[9px] font-black text-sky-600 uppercase mb-1.5 block">Total Length (M)</label>
@@ -729,11 +839,12 @@ function addProductRow(qtyFG='',qtyNG='0',width='',totalSkid='0',cut='0',totalLe
             <div>
                 <label class="text-[9px] font-black text-purple-600 uppercase mb-1.5 block flex items-center gap-1.5">
                     <span class="px-1.5 py-0.5 bg-rose-100 text-rose-600 rounded text-[8px] font-black">MANUAL</span>
-                    Coil Set Set Lifter (HH:mm:ss)
+                    Coil Set Set Lifter (HH:MM)
                 </label>
-                <input type="text" id="coilSetLifter-${rowId}" value="${coilSetLifter}" placeholder="15:30:00"
-                    maxlength="8" oninput="formatTimeInput(this)"
-                    class="w-full px-3 py-2.5 bg-purple-50 border border-purple-200 rounded-xl font-mono font-black text-purple-700 outline-none focus:ring-2 focus:ring-purple-500 transition-all text-sm tracking-widest">
+                <input type="text" id="coilSetLifter-${rowId}" value="${coilSetLifter}" placeholder="15:30"
+                    maxlength="5" readonly inputmode="none" data-label="Coil Set Lifter (HH:MM)"
+                    onclick="openTimePad(this)"
+                    class="w-full px-3 py-2.5 bg-purple-50 border border-purple-200 rounded-xl font-mono font-black text-purple-700 outline-none focus:ring-2 focus:ring-purple-500 transition-all text-sm tracking-widest cursor-pointer">
             </div>
         </div>`;
     container.appendChild(div);
@@ -776,9 +887,13 @@ function openFinishModal(id, mode) {
     }
     safeCreateIcons();
 
-    // Clear semua field
+    // Siapkan field waktu (keypad) + clear semua field
+    ensureProdukKeluarField();
+    attachTimePad(document.getElementById('finish-finish-time'), 'Finish Process (HH:MM)');
     const finishTimeEl=document.getElementById('finish-finish-time');
     if(finishTimeEl){ finishTimeEl.value=''; finishTimeEl.classList.remove('border-emerald-400','border-rose-400'); }
+    const pkEl=document.getElementById('finish-produk-keluar');
+    if(pkEl){ pkEl.value=''; pkEl.classList.remove('border-emerald-400','border-rose-400'); }
     document.getElementById('finish-speed').value='';
     document.getElementById('finish-remark').value='';
     document.getElementById('finish-actual-width-mc').value='';
@@ -808,17 +923,22 @@ function submitFinish() {
     if(!finishingItemId)return;
     const item=appData.find(i=>i.id===finishingItemId); if(!item)return;
 
-    // Finish Time dari input MANUAL
+    // Finish Time dari input MANUAL (keypad)
     const finishTimeRaw=(document.getElementById('finish-finish-time')?.value||'').trim();
     if(!isValidTimeFormat(finishTimeRaw)){
-        showToast("Isi Finish Process dengan format HH:mm:ss (contoh: 15:30:00)!","error");
-        document.getElementById('finish-finish-time')?.focus();
+        showToast("Isi Finish Process dengan format HH:MM (contoh: 15:30)!","error");
+        openTimePad(document.getElementById('finish-finish-time'));
         return;
     }
     const finishTime = finishTimeRaw;
 
-    // Produk Keluar = OTOMATIS = sama dengan Finish Time
-    const produkKeluar = finishTime;
+    // Produk Keluar = input MANUAL (keypad)
+    const produkKeluar=(document.getElementById('finish-produk-keluar')?.value||'').trim();
+    if(!isValidTimeFormat(produkKeluar)){
+        showToast("Isi Produk Keluar Mesin dengan format HH:MM (contoh: 15:35)!","error");
+        openTimePad(document.getElementById('finish-produk-keluar'));
+        return;
+    }
 
     // Produk rows
     const container=document.getElementById('product-rows-container');
@@ -830,8 +950,8 @@ function submitFinish() {
 
         const coilVal=(document.getElementById(`coilSetLifter-${rId}`)?.value||'').trim();
         if(coilVal && !isValidTimeFormat(coilVal)){
-            showToast(`Coil Set Set Lifter #${rId}: format harus HH:mm:ss!`,"error");
-            document.getElementById(`coilSetLifter-${rId}`)?.focus();
+            showToast(`Coil Set Set Lifter #${rId}: format harus HH:MM!`,"error");
+            openTimePad(document.getElementById(`coilSetLifter-${rId}`));
             return;
         }
 
